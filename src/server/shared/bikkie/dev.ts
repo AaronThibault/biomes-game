@@ -1,101 +1,29 @@
-import { serializeAuthCookies } from "@/server/shared/auth/cookies";
-import type { BakedBiscuitTray } from "@/server/shared/bikkie/registry";
-import type { BikkieStorage } from "@/server/shared/bikkie/storage/api";
-import {
-  fromStoredBakedTray,
-  zStoredBakedTray,
-} from "@/server/shared/bikkie/storage/baked";
-import { parseEncodedTrayDefinition } from "@/server/shared/bikkie/storage/definition";
-import { determineEmployeeUserId } from "@/server/shared/bootstrap/sync";
-import { SessionStore } from "@/server/web/db/sessions";
-import type { BiscuitTray } from "@/shared/bikkie/tray";
-import type { BiomesId } from "@/shared/ids";
-import { INVALID_BIOMES_ID } from "@/shared/ids";
 import { log } from "@/shared/logging";
-import { typesafeJSONStringify } from "@/shared/util/helpers";
-import { zrpcWebDeserialize, zrpcWebSerialize } from "@/shared/zrpc/serde";
-import { ok } from "assert";
 
-export async function loadTrayDefinitionFromProd(
-  bikkieStorage: BikkieStorage,
-  id?: BiomesId
-): Promise<BiscuitTray> {
-  const userId = await determineEmployeeUserId();
-  const authSessionId = SessionStore.createInternalSyncSession(userId).id;
+// Stubbed Bikkie dev helpers for your fork.
+// The original implementation pulled trays from Biomes' production environment.
+// For local/offline dev, we don't want to talk to prod or GCP at all.
 
-  const response = await fetch(
-    `https://www.biomes.gg/api/admin/bikkie/export_definition?id=${id ?? 0}`,
-    {
-      method: "POST",
-      headers: {
-        Cookie: serializeAuthCookies({
-          userId,
-          id: authSessionId,
-        }),
-      },
-    }
+/**
+ * In the original code, this fetched Bikkie tray definitions from prod and
+ * returned them as JSON. For your fork, we simply log and return undefined,
+ * allowing the rest of the system to continue without preloaded trays.
+ */
+export async function loadTrayDefinitionFromProd(): Promise<unknown> {
+  log.warn(
+    "loadTrayDefinitionFromProd: stubbed in local dev; skipping prod tray fetch."
   );
-  const data = (await response.json()).z;
-  const tray = await parseEncodedTrayDefinition(
-    id ?? INVALID_BIOMES_ID,
-    Buffer.from(data, "base64"),
-    async (id) => {
-      const tray = await loadTrayDefinitionFromProd(bikkieStorage, id);
-      await bikkieStorage.saveDefinition(tray);
-      return tray;
-    }
-  );
-  ok(tray, "Could not read prod tray!");
-  await bikkieStorage.saveDefinition(tray);
-  return tray;
+  return undefined;
 }
 
-export async function loadBakedTrayFromProd(): Promise<BakedBiscuitTray> {
-  const userId = await determineEmployeeUserId();
-  const authSessionId = SessionStore.createInternalSyncSession(userId).id;
-
-  const response = await fetch(
-    "https://www.biomes.gg/api/admin/bikkie/export",
-    {
-      method: "POST",
-      headers: {
-        Cookie: serializeAuthCookies({
-          userId,
-          id: authSessionId,
-        }),
-      },
-    }
+/**
+ * In the original code, this loaded a baked tray asset from prod (e.g., a
+ * precomputed bundle of Bikkie data). For local dev, we just skip this and
+ * return undefined, so the shim can start without external assets.
+ */
+export async function loadBakedTrayFromProd(): Promise<unknown> {
+  log.warn(
+    "loadBakedTrayFromProd: stubbed in local dev; skipping baked tray fetch."
   );
-  const data = (await response.json()).z;
-  const tray = fromStoredBakedTray(zrpcWebDeserialize(data, zStoredBakedTray));
-
-  log.info("Loaded baked Biscuits from prod", {
-    trayId: tray.id,
-    numBiscuits: tray.contents.size,
-  });
-  return tray;
-}
-
-export async function triggerProdBake(notes: string): Promise<void> {
-  const userId = await determineEmployeeUserId();
-  const authSessionId = SessionStore.createInternalSyncSession(userId).id;
-  const response = await fetch("https://www.biomes.gg/api/admin/bikkie/save", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: serializeAuthCookies({
-        userId,
-        id: authSessionId,
-      }),
-    },
-    body: typesafeJSONStringify({
-      z: zrpcWebSerialize({
-        trayName: notes,
-        updates: [],
-      }),
-    }),
-  });
-  if (!response.ok) {
-    throw new Error("Failed to trigger prod bake");
-  }
+  return undefined;
 }

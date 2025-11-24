@@ -6,11 +6,23 @@ import * as yaml from "js-yaml";
 import { isEmpty, isObject } from "lodash";
 
 async function startGlobalConfigWatcher(): Promise<Watcher | undefined> {
-  const override = JSON.parse(process.env.BIOMES_CONFIG_OVERIDE || "{}");
-  if (!isEmpty(override)) {
-    log.warn("Using config override from BIOMES_CONFIG_OVERIDE", {
-      override,
-    });
+  // Safely load config override from environment.
+  let override: Record<string, any> = {};
+
+  const rawOverride = process.env.BIOMES_CONFIG_OVERRIDE;
+  if (rawOverride) {
+    try {
+      override = JSON.parse(rawOverride);
+      if (!isEmpty(override)) {
+        log.warn("Using config override from BIOMES_CONFIG_OVERRIDE", {
+          override,
+        });
+      }
+    } catch (err) {
+      log.error("Invalid JSON in BIOMES_CONFIG_OVERRIDE. Ignoring override.", {
+        error: (err as Error).message,
+      });
+    }
   }
 
   const watcher = makeFilesWatcher(
@@ -25,6 +37,21 @@ async function startGlobalConfigWatcher(): Promise<Watcher | undefined> {
         log.error(`Invalid biomes config: ${path}`);
         return false;
       }
+
+      // Local dev guard: if CONFIG or CONFIG_EVENTS are not defined
+      // (e.g., in shim or other limited server environments),
+      // skip applying the config instead of crashing.
+      if (
+        typeof CONFIG === "undefined" ||
+        typeof CONFIG_EVENTS === "undefined"
+      ) {
+        log.warn(
+          "CONFIG or CONFIG_EVENTS not defined; skipping server-only config update",
+          { path }
+        );
+        return true;
+      }
+
       Object.assign(CONFIG, config);
       Object.assign(CONFIG, override);
       CONFIG_EVENTS.emit("changed");

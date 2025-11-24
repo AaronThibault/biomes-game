@@ -42,7 +42,13 @@ export async function determineEmployeeUserId(): Promise<BiomesId> {
     case "devin@ill.inc":
       return 4911201062558487 as BiomesId; // Devin
   }
-  throw new Error(`Unknown Employee Account: ${account}`);
+  log.warn(
+    "Unknown Employee Account: %s; using stub employee id 1 for local dev.",
+    account
+  );
+  // For your fork, it's fine to use a fixed dummy employee user ID.
+  // This avoids crashing when running outside Ill Inc's internal env.
+  return 1 as BiomesId;
 }
 
 export async function safeDetermineEmployeeUserId(): Promise<
@@ -114,6 +120,14 @@ export class SyncBootstrap implements Bootstrap {
   async load(
     signal?: AbortSignal
   ): Promise<[changes: Change[], deliveries: Delivery[]]> {
+    // Local dev / offline mode: skip remote sync entirely.
+    if (process.env.BIOMES_SKIP_REMOTE_SYNC === "1") {
+      log.warn(
+        "SyncBootstrap: BIOMES_SKIP_REMOTE_SYNC=1; starting with empty world and no chat history."
+      );
+      return [[], []];
+    }
+
     log.info(`SyncBootstrap connecting to prod.`);
     const employeeId = await determineEmployeeUserId();
     const client = await createSyncClient(employeeId);

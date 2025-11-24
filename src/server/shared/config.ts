@@ -20,21 +20,21 @@ import type TypedEventEmitter from "typed-emitter";
 
 export const DEFAULT_CONFIG_LOOKUP_PATHS: LookupPath[] = [
   {
-    // This is the config used in prod.
-    path: "/biomes/biomes.config.yaml",
+    // Primary config for your fork (checked into the repo root).
+    path: "./biomes.config.yaml",
   },
   {
-    // Example config local developers can use.
+    // Per-developer overrides (not committed).
     path: "./biomes.config.local.yaml",
     devOnly: true,
   },
   {
-    // Sane defaults for all local developers.
+    // Shared dev defaults (safe for everyone on the team).
     path: "./biomes.config.dev.yaml",
     devOnly: true,
   },
   {
-    // Fallback to the committed prod config (this is deployed as #1).
+    // Optional: fallback to their original prod config, if you still want it.
     path: "./deploy/k8/biomes.config.yaml",
   },
 ];

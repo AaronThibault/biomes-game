@@ -4,6 +4,7 @@ import { emptyBakedTray } from "@/server/shared/bikkie/storage/baked";
 import { type BiscuitTray } from "@/shared/bikkie/tray";
 import { cloneDeepWithItems } from "@/shared/game/item";
 import type { BiomesId } from "@/shared/ids";
+import { log } from "@/shared/logging";
 
 export class MemoryBikkieStorage implements BikkieStorage {
   private definitions = new Map<BiomesId, BiscuitTray>();
@@ -17,7 +18,13 @@ export class MemoryBikkieStorage implements BikkieStorage {
     return this.definitions.get(id);
   }
 
-  async save(baked: BakedBiscuitTray) {
+  async save(baked: BakedBiscuitTray | undefined) {
+    if (!baked) {
+      log.warn(
+        "MemoryBikkieStorage.save: called with no baked tray; skipping (local dev stub)."
+      );
+      return;
+    }
     this.tray = cloneDeepWithItems(baked);
   }
 

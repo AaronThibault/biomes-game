@@ -1,5 +1,12 @@
 # See src/server/shared/config.ts for config definition!
 
+discordHooksEnabled: false
+discordGatingServerId: ""
+discordEarlyAccessGeneralChannelId: ""
+discordPlaytesterRoleId: ""
+
+disableGame: false
+
 playerChatRadius: 100
 
 # Adjusted websocket connection in local development.
