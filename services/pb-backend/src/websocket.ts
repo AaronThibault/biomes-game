@@ -402,7 +402,6 @@ function handleClientMessage(
 
       const members = rooms.get(roomId);
       if (!members || members.size === 0) {
-        // No one else is in the room; we still treat this as success.
         console.log(
           `[WS] [${clientId}] roomBroadcast to empty room: ${roomId} text="${text}"`
         );
@@ -428,6 +427,76 @@ function handleClientMessage(
         }
       }
 
+      break;
+    }
+
+    case "getRoomMembers": {
+      const roomIdRaw = msg.payload?.roomId;
+      if (typeof roomIdRaw !== "string" || roomIdRaw.trim() === "") {
+        sendError(
+          ws,
+          "invalid_payload",
+          "getRoomMembers.payload.roomId must be a non-empty string."
+        );
+        return;
+      }
+
+      const info = clientInfo;
+      if (!info || !info.isAuthenticated) {
+        sendError(
+          ws,
+          "unauthorized",
+          "Authentication required to query room members."
+        );
+        return;
+      }
+
+      const roomId = roomIdRaw.trim();
+
+      if (!info.rooms.has(roomId)) {
+        sendError(
+          ws,
+          "not_in_room",
+          `Client is not a member of room '${roomId}'.`
+        );
+        return;
+      }
+
+      const membersWs = rooms.get(roomId) ?? new Set<WebSocket>();
+      const members = Array.from(membersWs)
+        .map((memberWs) => clients.get(memberWs))
+        .filter((m): m is ClientInfo => !!m)
+        .map((m) => ({
+          clientId: m.clientId,
+          userId: m.userId,
+          authUserId: m.authUserId,
+        }));
+
+      send(ws, {
+        type: "roomMembers",
+        payload: {
+          roomId,
+          members,
+        },
+      });
+      break;
+    }
+
+    case "listMyRooms": {
+      const info = clientInfo;
+      if (!info || !info.isAuthenticated) {
+        sendError(ws, "unauthorized", "Authentication required to list rooms.");
+        return;
+      }
+
+      const roomsArray = Array.from(info.rooms);
+
+      send(ws, {
+        type: "myRooms",
+        payload: {
+          rooms: roomsArray,
+        },
+      });
       break;
     }
 

@@ -8,7 +8,9 @@ export type ClientMessage =
   | { type: "broadcast"; payload: { text: string } }
   | { type: "joinRoom"; payload: { roomId: string } }
   | { type: "leaveRoom"; payload: { roomId: string } }
-  | { type: "roomBroadcast"; payload: { roomId: string; text: string } };
+  | { type: "roomBroadcast"; payload: { roomId: string; text: string } }
+  | { type: "getRoomMembers"; payload: { roomId: string } }
+  | { type: "listMyRooms" };
 
 // Messages the server can send back to the client.
 export type ServerMessage =
@@ -29,6 +31,23 @@ export type ServerMessage =
   | {
       type: "roomBroadcast";
       payload: { roomId: string; fromClientId: string; text: string };
+    }
+  | {
+      type: "roomMembers";
+      payload: {
+        roomId: string;
+        members: Array<{
+          clientId: string;
+          userId?: string;
+          authUserId?: string;
+        }>;
+      };
+    }
+  | {
+      type: "myRooms";
+      payload: {
+        rooms: string[];
+      };
     }
   | { type: "error"; payload: { code: string; message: string } };
 
