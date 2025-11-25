@@ -27,3 +27,38 @@ cd /mnt/c/Gamebridge/Dev
 git clone git@github.com:AaronThibault/biomes-game.git
 cd biomes-game
 ```
+
+---
+
+## 3. Project Believe Backend (pb-backend)
+
+We are building a local-first backend in `services/pb-backend`.
+
+### Running the backend
+
+To run the backend in isolation:
+
+```bash
+# From repo root (in WSL)
+docker-compose up --build pb-backend
+```
+
+### Testing
+
+- **HTTP Health Check**:
+  ```bash
+  curl http://localhost:4100/healthz
+  ```
+- **WebSocket**:
+  Connect any WS client (e.g., Postman, wscat) to:
+  `ws://localhost:4905/pb-sync`
+
+  Example payloads:
+
+  ```json
+  { "type": "ping" }
+  ```
+
+  ```json
+  { "type": "echo", "payload": { "text": "hello from client" } }
+  ```

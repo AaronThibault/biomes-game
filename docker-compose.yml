@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  pb-backend:
+    build: ./services/pb-backend
+    ports:
+      - "4100:4100"
+      - "4905:4905"
+    environment:
+      NODE_ENV: development
+    # volumes:
+    #   - ./services/pb-backend/src:/app/src  # Optional: for hot reload in future
+
+  # postgres:
+  #   image: postgres:16
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_PASSWORD: password
