@@ -62,3 +62,19 @@ docker-compose up --build pb-backend
   ```json
   { "type": "echo", "payload": { "text": "hello from client" } }
   ```
+
+### Tick loop (20 TPS)
+
+The pb-backend WebSocket server runs a **20 Hz tick loop** and broadcasts tick messages
+to authenticated clients:
+
+- Message shape:
+
+  ```json
+  { "type": "tick", "payload": { "timestamp": 1732598234000 } }
+  ```
+
+Tick rate: 20 ticks per second (every 50 ms)
+
+This tick is the starting point for future server-authoritative simulation
+(movement, combat, physics, AI, etc.).
