@@ -25,6 +25,18 @@ export type ServerMessage =
         isAuthenticated: boolean;
       };
     }
+  | {
+      // 20 TPS server tick; see websocket.ts for details.
+      type: "tick";
+      payload: {
+        /**
+         * Server-side timestamp in milliseconds since Unix epoch.
+         * Clients should treat this as the authoritative timebase
+         * for movement, combat, and physics, not their local clocks.
+         */
+        timestamp: number;
+      };
+    }
   | { type: "broadcast"; payload: { fromClientId: string; text: string } }
   | { type: "roomJoined"; payload: { roomId: string } }
   | { type: "roomLeft"; payload: { roomId: string } }
@@ -47,6 +59,16 @@ export type ServerMessage =
       type: "myRooms";
       payload: {
         rooms: string[];
+      };
+    }
+  | {
+      type: "roomPresence";
+      payload: {
+        roomId: string;
+        event: "join" | "leave";
+        clientId: string;
+        userId?: string;
+        authUserId?: string;
       };
     }
   | { type: "error"; payload: { code: string; message: string } };

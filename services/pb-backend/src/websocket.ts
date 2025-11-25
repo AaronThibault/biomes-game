@@ -30,12 +30,22 @@ function verifyAuthToken(authToken: string | undefined): VerifiedAuth | null {
 
   // Development stub behavior:
   // - Treat any non-empty token as valid
-  // - Use the token itself as the userId for now
+  // - Use the token itself as the userId for now.
+  // This will be replaced by real Gamebridge auth integration.
   return {
     userId: authToken,
     roles: [],
   };
 }
+
+// Tick configuration:
+// We intentionally use a 20 Hz (20 ticks per second, 50ms interval) server tick.
+// This is a deliberate design choice for Project Believe to:
+// - Support responsive movement, combat, communication, and light physics.
+// - Keep CPU and bandwidth costs low for Chromebooks, low-end phones, and browsers.
+// - Match common industry practice (e.g., Minecraft/Roblox-style 20 TPS).
+const TICK_RATE_HZ = 20;
+const TICK_INTERVAL_MS = 1000 / TICK_RATE_HZ;
 
 export function startWebSocketServer(port: number) {
   const wss = new WebSocketServer({ port, path: "/pb-sync" });
@@ -44,6 +54,26 @@ export function startWebSocketServer(port: number) {
   const clients = new Map<WebSocket, ClientInfo>();
   const rooms = new Map<string, Set<WebSocket>>();
   let nextClientId = 1;
+
+  // 20 TPS server tick loop.
+  // This is the authoritative timebase that future simulation systems
+  // (movement, combat, physics, AI) will hang off of. For now, we only
+  // broadcast tick messages to authenticated clients as a lightweight
+  // starting point.
+  setInterval(() => {
+    const now = Date.now();
+
+    for (const [ws, info] of clients.entries()) {
+      if (ws.readyState !== ws.OPEN) continue;
+      if (!info.isAuthenticated) continue;
+
+      const tickMessage: ServerMessage = {
+        type: "tick",
+        payload: { timestamp: now },
+      };
+      ws.send(serializeServerMessage(tickMessage));
+    }
+  }, TICK_INTERVAL_MS);
 
   wss.on("connection", (ws) => {
     const clientId = String(nextClientId++);
@@ -110,13 +140,16 @@ export function startWebSocketServer(port: number) {
       );
 
       if (info) {
-        // Remove client from all rooms
+        // Remove client from all rooms and send presence leave to remaining members.
         for (const roomId of info.rooms) {
           const members = rooms.get(roomId);
           if (members) {
             members.delete(ws);
+
             if (members.size === 0) {
               rooms.delete(roomId);
+            } else {
+              broadcastRoomPresence(rooms, clients, roomId, "leave", info);
             }
           }
         }
@@ -128,7 +161,7 @@ export function startWebSocketServer(port: number) {
 }
 
 function handleClientMessage(
-  wss: WebSocketServer,
+  _wss: WebSocketServer,
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
   rooms: Map<string, Set<WebSocket>>,
@@ -296,6 +329,8 @@ function handleClientMessage(
         members = new Set<WebSocket>();
         rooms.set(roomId, members);
       }
+
+      const alreadyMember = members.has(ws);
       members.add(ws);
 
       console.log(
@@ -308,6 +343,11 @@ function handleClientMessage(
         type: "roomJoined",
         payload: { roomId },
       });
+
+      // Notify other room members (and the joining client) about this join.
+      if (!alreadyMember) {
+        broadcastRoomPresence(rooms, clients, roomId, "join", info);
+      }
       break;
     }
 
@@ -334,6 +374,7 @@ function handleClientMessage(
 
       const roomId = roomIdRaw.trim();
 
+      const wasInRoom = info.rooms.has(roomId);
       info.rooms.delete(roomId);
 
       const members = rooms.get(roomId);
@@ -354,6 +395,10 @@ function handleClientMessage(
         type: "roomLeft",
         payload: { roomId },
       });
+
+      if (wasInRoom) {
+        broadcastRoomPresence(rooms, clients, roomId, "leave", info);
+      }
       break;
     }
 
@@ -509,6 +554,38 @@ function handleClientMessage(
       );
       return _exhaustiveCheck;
     }
+  }
+}
+
+function broadcastRoomPresence(
+  rooms: Map<string, Set<WebSocket>>,
+  clients: Map<WebSocket, ClientInfo>,
+  roomId: string,
+  event: "join" | "leave",
+  subject: ClientInfo
+) {
+  const members = rooms.get(roomId);
+  if (!members || members.size === 0) {
+    return;
+  }
+
+  for (const memberWs of members) {
+    const memberInfo = clients.get(memberWs);
+    if (!memberInfo) continue;
+    if (memberWs.readyState !== memberWs.OPEN) continue;
+
+    const message: ServerMessage = {
+      type: "roomPresence",
+      payload: {
+        roomId,
+        event,
+        clientId: subject.clientId,
+        userId: subject.userId,
+        authUserId: subject.authUserId,
+      },
+    };
+
+    memberWs.send(serializeServerMessage(message));
   }
 }
 
