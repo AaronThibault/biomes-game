@@ -90,7 +90,11 @@ Pipeline handles:
 - LOD chain generation
 
 **Output:**
-`tools/asset-ingest/` with CLI + service hooks
+
+- [docs/asset_pipeline_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/asset_pipeline_model.md) — Pipeline documentation
+- [src/shared/assets/types.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/assets/types.ts) — Asset type definitions
+- [src/shared/assets/ingest.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/assets/ingest.ts) — Ingest API (stub)
+- [tools/asset-ingest/](file:///c:/Gamebridge/Dev/biomes-game/tools/asset-ingest/) — CLI tool (stub)
 
 ---
 
@@ -105,7 +109,9 @@ Define the Believe look:
 
 This ensures UGC doesn’t look random.
 
-**Output:** `docs/art_style_spec.md`
+**Output:**
+
+- [docs/art_style_spec.md](file:///c:/Gamebridge/Dev/biomes-game/docs/art_style_spec.md) — Art style specification
 
 ---
 
