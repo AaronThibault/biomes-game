@@ -83,3 +83,4 @@ BUILD_ID.bob
 snapshot_backup.json
 biomes_data_snapshot.tar.gz.hash.md5
 *.rdb
+.biomes-venv-310/
