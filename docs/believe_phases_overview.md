@@ -691,6 +691,69 @@ This file is append-only: new phases are added chronologically without modifying
 
 ---
 
+## Phase 11 — Runtime Placement View (Read-Only Vertical Slice)
+
+**Completed:** 2025-11-25
+
+### Intent Summary
+
+- Define runtime-facing read model for Believe world state
+- Flatten hierarchical structures (Regions → Spaces → Placements) for engine consumption
+- Provide validity flags from validation results
+- Create pure builder function for constructing runtime view
+- No ECS, networking, or Biomes runtime integration in this phase
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_view_model.md` — Runtime view model and use cases
+
+**Shared Types:**
+
+- `src/shared/world/runtime_view.ts` — RuntimePlacementView and RuntimeWorldView types
+- `src/shared/world/runtime_view_builder.ts` — buildRuntimeWorldView function (stub logic)
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Contract-only, no engine/runtime integration
+- No ECS or Biomes server wiring
+- Stub builder logic only
+- Pure, deterministic functions
+
+**Non-Goals:**
+
+- ECS integration
+- Chunk streaming or spatial indexing
+- Networking or serialization
+- Persistence or caching
+- Biomes-specific runtime hooks
+
+**Stub-Only Restrictions:**
+
+- commitPlan input accepted but not applied
+- validationResult input accepted but not applied
+- All placements marked as valid (isValid: true, hasWarnings: false)
+- No filtering or derived properties
+
+**Integration Boundaries:**
+
+- Builds from Regions (Phase 1), AssetPlacements (Phase 3)
+- Accepts CommitPlan (Phase 6) and ValidationResult (Phase 7) for future use
+- Outputs flattened RuntimePlacementView array
+
+### Completion Notes
+
+- RuntimePlacementView includes placementId, assetId, transform, tags, validity flags
+- RuntimeWorldView provides flattened placements array and regions array
+- buildRuntimeWorldView is pure function with no side effects
+- Stub logic: all placements valid, no commit/validation logic applied
+- Future work: apply commit plan, apply validation results, spatial indexing, LOD selection, incremental updates, Biomes runtime integration
+
+---
+
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.

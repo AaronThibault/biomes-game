@@ -363,6 +363,27 @@ This includes:
 
 ---
 
+## 11.0 Runtime Placement View (Read-Only Vertical Slice)
+
+Define a runtime-facing read model for Believe that flattens regions and
+asset placements (optionally commit and validation results) into a
+RuntimeWorldView structure suitable for engine/runtime consumption.
+
+This includes:
+
+- RuntimePlacementView with validity flags
+- RuntimeWorldView with flattened placements
+- Pure builder function for constructing runtime view
+- No ECS, networking, or Biomes runtime integration
+
+**Output:**
+
+- [docs/runtime_view_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_view_model.md) — Runtime view documentation
+- [src/shared/world/runtime_view.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/runtime_view.ts) — Runtime view types
+- [src/shared/world/runtime_view_builder.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/runtime_view_builder.ts) — Runtime view builder (stubs)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling
