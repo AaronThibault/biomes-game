@@ -297,3 +297,117 @@ This phase explicitly **does not** include:
 - **Caching**: Cache runtime view for performance
 - **Diff Computation**: Compute changes between views
 - **Serialization**: Serialize runtime view for network/storage
+
+---
+
+## Phase 12: Commit & Validation Application
+
+### Overview
+
+Phase 12 enhances the runtime view builder to actively apply commit plans and validation results. The `RuntimeWorldView` now reflects effective placements after commit application and includes accurate validity flags based on validation.
+
+### Inputs Now Actively Used
+
+**CommitPlan (from Phase 6):**
+
+- Defines which placement changes should be applied (ADD, UPDATE, REMOVE)
+- Processed in order to produce effective placements
+- Changes with invalid references are silently ignored
+
+**ValidationResult (from Phase 7):**
+
+- Defines which placements have warnings/errors
+- Used to set `isValid`, `hasWarnings`, and `validationIssueIds` flags
+- Only issues with `placementId` set are considered
+
+### Behavioral Changes
+
+**Effective Placements:**
+
+- `RuntimeWorldView.placements` now reflects placements after commit plan application
+- ADD changes insert new placements
+- UPDATE changes modify existing placements
+- REMOVE changes delete placements
+- Order of changes matters (applied sequentially)
+
+**Validity Flags:**
+
+- `isValid`: Set to `false` if placement has any ERROR-severity issues
+- `hasWarnings`: Set to `true` if placement has any WARNING-severity issues
+- `validationIssueIds`: Array of issue IDs for this placement (or `undefined` if none)
+
+### Implementation Details
+
+**applyCommitPlan (internal helper):**
+
+1. If no commit plan, return base placements unchanged
+2. Build map: `placementId → AssetPlacement`
+3. Iterate commit plan changes in order:
+   - ADD: Insert `change.after` into map
+   - UPDATE: Replace placement with `change.after`
+   - REMOVE: Delete placement from map
+4. Return effective placements from map values
+
+**applyValidationResult (internal helper):**
+
+1. If no validation result, return runtime placements unchanged
+2. Build lookup: `placementId → { issues[], hasError, hasWarning }`
+3. For each validation issue:
+   - Skip if no `placementId` set
+   - Add to issues array for that placement
+   - Set `hasError` if severity is ERROR
+   - Set `hasWarning` if severity is WARNING
+4. Map runtime placements to updated versions:
+   - If no issues: `isValid: true`, `hasWarnings: false`, `validationIssueIds: undefined`
+   - If has issues: Set flags based on lookup
+
+**buildRuntimeWorldView (updated flow):**
+
+1. Apply commit plan to get effective placements
+2. Map effective placements to `RuntimePlacementView` (with default validity flags)
+3. Apply validation result to set accurate validity flags
+4. Return `RuntimeWorldView`
+
+### Non-Goals (Still)
+
+Phase 12 maintains the same non-goals as Phase 11:
+
+- **No ECS Integration**: Still no entity-component-system mapping
+- **No Chunk Streaming**: Still no spatial indexing or chunk-based loading
+- **No Networking**: Still no network serialization or client-server sync
+- **No Persistence**: Still no database storage or file I/O
+- **No Runtime Hooks**: Still no Biomes server integration or game loop
+
+### Use Cases Enhanced
+
+**Commit Preview (Now Functional):**
+
+1. Create `CommitPlan` from editing session
+2. Build `RuntimeWorldView` with `commitPlan`
+3. Preview shows effective placements after commit
+4. User can see ADD/UPDATE/REMOVE changes applied
+5. User approves or rejects commit
+
+**Validation Preview (Now Functional):**
+
+1. Run validation on placements
+2. Build `RuntimeWorldView` with `validationResult`
+3. Filter placements where `isValid === true`
+4. Render only valid placements
+5. Display warnings for placements with `hasWarnings === true`
+
+**Combined Preview:**
+
+1. Create `CommitPlan` and run validation
+2. Build `RuntimeWorldView` with both inputs
+3. Preview shows effective placements with validity flags
+4. User can see both commit changes and validation results
+5. Reject commit if any blocking issues found
+
+### Future Enhancements
+
+- **Conflict Visualization**: Highlight placements with commit conflicts
+- **Issue Filtering**: Filter placements by specific issue types
+- **Incremental Application**: Apply only changed placements
+- **Undo/Redo**: Support commit plan reversal
+- **Diff Visualization**: Show before/after for UPDATE changes
