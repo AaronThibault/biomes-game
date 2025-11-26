@@ -46,6 +46,8 @@ export enum Capability {
   MANAGE_USD_INTEGRATION = "MANAGE_USD_INTEGRATION",
   /** Permission to manage PlanGraph and .plan files */
   MANAGE_PLAN_GRAPH = "MANAGE_PLAN_GRAPH",
+  /** Permission to view runtime debug information */
+  VIEW_RUNTIME_DEBUG = "VIEW_RUNTIME_DEBUG",
 }
 
 /**

@@ -951,6 +951,82 @@ This file is append-only: new phases are added chronologically without modifying
 
 ---
 
+## Phase 15 — Runtime Debug & Introspection Contracts
+
+**Completed:** 2025-11-25
+
+### Intent Summary
+
+- Define debug events, probes, and snapshots for runtime introspection
+- Support engine-side tooling, editor overlays, and diagnostics
+- Bridge validation, commits, PlanGraph, and USD into debug surface
+- No logging backend, no persistence, no transport, no engine hooks
+- Enable structured, queryable debug information
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_debug_model.md` — Runtime debug & introspection model
+
+**Shared Types:**
+
+- `src/shared/runtime/debug.ts` — DebugEvent, DebugProbe, DebugSnapshot types with enums
+- `src/shared/runtime/debug_service.ts` — RuntimeDebugService interface and stub implementations
+
+**Permissions:**
+
+- `src/shared/world/permissions.ts` — Extended with VIEW_RUNTIME_DEBUG capability
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Contract-only, no implementation
+- No logging backend or infrastructure
+- No persistence or event storage
+- No transport or streaming
+- No engine hooks or integration
+- Stub implementations only
+
+**Non-Goals:**
+
+- Logging infrastructure
+- Persistence layer
+- Real-time streaming
+- Performance profiling
+- WebSocket server
+- Visualization tools
+
+**Stub Implementations:**
+
+- recordDebugEventStub: Ensures event has ID and timestamp, returns event
+- getDebugEventsStub: Returns empty array (no persistence)
+- createDebugSnapshotStub: Returns snapshot with worldView and empty events
+
+**Integration Boundaries:**
+
+- References RuntimePlacementView (Phase 11-12)
+- References validation issues (Phase 7, 12)
+- References CommitPlan (Phase 6, 12)
+- References PlanNodeId (Phase 10)
+- References USD prim paths (Phase 9)
+- No changes to existing runtime types
+
+### Completion Notes
+
+- DebugSeverity enum: INFO, WARNING, ERROR
+- DebugEventType enum: 8 event types (validation, commit, preview, state, performance, system, other)
+- DebugEvent: Atomic debug record with type, severity, message, timestamp, context
+- DebugEventContext: References placements, regions, validation, PlanGraph, USD
+- DebugProbe: Configured interest with spatial, entity, and classification filters
+- DebugSnapshot: Summarized view with RuntimeWorldView and events
+- RuntimeDebugService: Interface with 3 methods (recordEvent, getEvents, createSnapshot)
+- VIEW_RUNTIME_DEBUG permission added to Capability enum
+- Future work: event storage, querying with probes, snapshot persistence, logging integration, real-time streaming, performance profiling, visualization
+
+---
+
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.

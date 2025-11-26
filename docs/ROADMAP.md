@@ -444,6 +444,27 @@ This includes:
 
 ---
 
+## 15.0 Runtime Debug & Introspection Contracts
+
+Define the contracts for runtime debug events, probes, and snapshots over the
+runtime view, validation, PlanGraph, and USD integration layers.
+
+This includes:
+
+- DebugEvent, DebugProbe, and DebugSnapshot types
+- DebugSeverity and DebugEventType enums
+- RuntimeDebugService interface with stub implementations
+- VIEW_RUNTIME_DEBUG permission capability
+
+**Output:**
+
+- [docs/runtime_debug_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_debug_model.md) — Runtime debug & introspection model
+- [src/shared/runtime/debug.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/debug.ts) — Debug events, probes, and snapshot types
+- [src/shared/runtime/debug_service.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/debug_service.ts) — Runtime debug service API (stubs)
+- [src/shared/world/permissions.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/permissions.ts) — Extended capabilities (VIEW_RUNTIME_DEBUG)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling
