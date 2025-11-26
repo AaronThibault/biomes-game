@@ -412,6 +412,46 @@ This phase explicitly **does not** include:
 - Add performance optimization
 - Implement instance pooling
 
+## Diff-Based Apply (Phase 21)
+
+**Phase 21** introduces deterministic diff computation for `RuntimeWorldView` comparison.
+
+### Overview
+
+The engine adapter now uses a real diff engine to compute changes between world views:
+
+- **Before:** Stub logic with empty results
+- **After:** Real diff computation via `diffRuntimeWorldViews()`
+- **Output:** `EngineApplyResult` with `added`, `updated`, `removed` arrays
+- **Ordering:** All arrays sorted by `placementId` ascending
+- **Determinism:** Same inputs always produce same output
+
+### Diff Engine
+
+**Module:** `src/shared/runtime/runtime_diff.ts`
+
+**Key Functions:**
+
+- `areRuntimePlacementsEqual()`: Deep structural comparison
+- `diffRuntimeWorldViews()`: Main diff function with O(1) lookup
+
+**Diff Rules:**
+
+- **Added**: `placementId` in `after` but not in `before`
+- **Removed**: `placementId` in `before` but not in `after`
+- **Updated**: `placementId` in both, but structurally different
+
+### Integration
+
+The `computeDiff()` method now:
+
+1. Calls `diffRuntimeWorldViews(previous, next)`
+2. Maps diff results to `EngineApplyResult`
+3. Returns canonical, deterministic output
+4. Still doesn't create actual engine instances (introspection-only)
+
+**Note:** Engine adapter remains introspection-only. No actual engine integration, asset loading, or instance creation yet.
+
 ## Future Considerations
 
 - **Instance Pooling**: Reuse instances for performance

@@ -205,6 +205,69 @@ The playground executes the following pipeline sequentially:
 - Engine adapter interface
 - World view application
 
+### 3.5. Build Runtime Linking Index (Phase 20)
+
+**Function:** `buildRuntimeLinkingIndex()`
+
+**Input:** Fixture regions and placements
+
+**Output:** `RuntimeLinkingIndex`
+
+**Provides:**
+
+- USD prim path derivation for placements, regions, spaces
+- PlanGraph node ID derivation for placements, regions, spaces
+- Fast lookup by placementId, regionId, spaceId
+
+**Demonstrates:**
+
+- USD ↔ Runtime linkage
+- PlanGraph ↔ Runtime linkage
+- Introspection infrastructure
+
+### 3.6. Compute Runtime Diff (Phase 21)
+
+**Function:** `diffRuntimeWorldViews()`
+
+**Input:** Baseline world view (before commit), world view (after commit)
+
+**Output:** `RuntimeWorldDiff`
+
+**Provides:**
+
+- Deterministic diff computation
+- Added/removed/updated placement detection
+- Canonical ordering by placementId
+
+**Demonstrates:**
+
+- Pure diff engine
+- Structural comparison
+- Deterministic output
+
+- Deterministic output
+
+### 3.7. Runtime Invariant Checks (Phase 22)
+
+**Function:** `checkRuntimeInvariants()`
+
+**Input:** `RuntimeInvariantContext` (WorldView, SpatialIndex, Diff, ValidationResult, LinkingIndex)
+
+**Output:** `RuntimeInvariantReport`
+
+**Provides:**
+
+- Consistency verification across all runtime subsystems
+- Detection of impossible states (e.g., spatial index mismatch)
+- Validation of diff integrity
+- Verification of linkage completeness
+
+**Demonstrates:**
+
+- Self-checking runtime architecture
+- Pure, deterministic invariant checking
+- "Crash early" (or report early) philosophy for data integrity
+
 ## Playground Result
 
 The playground outputs a JSON summary with the following structure:
@@ -240,7 +303,56 @@ interface PlaygroundResult {
     adapterId: string;
     instanceCount: number;
   };
+  linkingSummary: {
+    samplePlacements: readonly {
+      placementId: PlacementId;
+      usdPrimPath: string;
+      planNodeId: PlanNodeId;
+    }[];
+    sampleRegions: readonly {
+      regionId: string;
+      usdPrimPath: string;
+      planNodeId: PlanNodeId;
+    }[];
+  };
+  invariantSummary: {
+    hasErrors: boolean;
+    hasWarnings: boolean;
+    violationCount: number;
+    sampleViolations: readonly {
+      id: string;
+      severity: string;
+      message: string;
+    }[];
+  };
   steps: readonly PlaygroundStepSummary[];
+}
+```
+
+## Non-Goals
+
+### linkingSummary (Phase 20)
+
+The `linkingSummary` field demonstrates USD ↔ PlanGraph ↔ Runtime linkage:
+
+```json
+{
+  "linkingSummary": {
+    "samplePlacements": [
+      {
+        "placementId": "placement-001",
+        "usdPrimPath": "/World/Regions/region-main/Spaces/space-hub/Placements/Placement_placement-001",
+        "planNodeId": "placement-placement-001"
+      }
+    ],
+    "sampleRegions": [
+      {
+        "regionId": "region-main",
+        "usdPrimPath": "/World/Regions/region-main",
+        "planNodeId": "region-region-main"
+      }
+    ]
+  }
 }
 ```
 

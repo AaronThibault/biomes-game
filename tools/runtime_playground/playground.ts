@@ -6,8 +6,13 @@
  *
  * Phase 18: Carmack-style golden path harness.
  * Phase 19: Uses real baseline validation rules.
+ * Phase 20: USD ↔ PlanGraph ↔ Runtime linkage introspection.
+ * Phase 21: Deterministic runtime diff engine.
+ * Phase 22: Runtime invariant checks & consistency harness.
  */
 
+import { buildRuntimeLinkingIndex } from "@/shared/linking/runtime_linking";
+import type { PlanNodeId } from "@/shared/plan/plan_types";
 import {
   buildRuntimeAssetBindingsStub,
   getMissingOrFailedBindingsStub,
@@ -15,6 +20,8 @@ import {
 import { createDebugSnapshotStub } from "@/shared/runtime/debug_service";
 import { EngineApplyMode } from "@/shared/runtime/engine_adapter";
 import { createNoopEngineAdapter } from "@/shared/runtime/engine_adapter_service";
+import { diffRuntimeWorldViews } from "@/shared/runtime/runtime_diff";
+import { checkRuntimeInvariants } from "@/shared/runtime/runtime_invariants";
 import type { PlacementId } from "@/shared/world/placement";
 import {
   getRegionSnapshotStub,
@@ -80,6 +87,56 @@ export interface PlaygroundResult {
     readonly instanceCount: number;
   };
 
+  /** USD ↔ PlanGraph ↔ Runtime linkage summary (Phase 20) */
+  readonly linkingSummary: {
+    readonly samplePlacements: readonly {
+      readonly placementId: PlacementId;
+      readonly usdPrimPath: string;
+      readonly planNodeId: PlanNodeId;
+    }[];
+    readonly sampleRegions: readonly {
+      readonly regionId: string;
+      readonly usdPrimPath: string;
+      readonly planNodeId: PlanNodeId;
+    }[];
+  };
+
+  /** Runtime diff summary (Phase 21) */
+  readonly diffSummary: {
+    readonly addedCount: number;
+    readonly removedCount: number;
+    readonly updatedCount: number;
+    readonly sampleUpdated?: {
+      readonly placementId: PlacementId;
+      readonly before: unknown;
+      readonly after: unknown;
+    };
+  };
+
+  /** Runtime invariant check summary (Phase 22) */
+  readonly invariantSummary: {
+    readonly hasErrors: boolean;
+    readonly hasWarnings: boolean;
+    readonly violationCount: number;
+    readonly sampleViolations: readonly {
+      readonly id: string;
+      readonly severity: string;
+      readonly message: string;
+    }[];
+  };
+
+  /** Runtime invariant check summary (Phase 22) */
+  readonly invariantSummary: {
+    readonly hasErrors: boolean;
+    readonly hasWarnings: boolean;
+    readonly violationCount: number;
+    readonly sampleViolations: readonly {
+      readonly id: string;
+      readonly severity: string;
+      readonly message: string;
+    }[];
+  };
+
   /** Pipeline step summaries */
   readonly steps: readonly PlaygroundStepSummary[];
 }
@@ -138,12 +195,32 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
       validationIssueCount: mergedValidationResult.issues.length,
     },
   });
+
+  // Build baseline world view (before commit) for diff computation
+  const baselineWorldView = buildRuntimeWorldView({
+    regions: fixture.regions,
+    placements: fixture.placements,
+    commitPlan: { changes: [] }, // Empty commit plan
+    validationResult: baseValidation, // Only base validation
+  });
+
+  // Build world view with commit applied (after)
   const worldView = buildRuntimeWorldView({
     regions: fixture.regions,
     placements: fixture.placements,
     commitPlan: fixture.commitPlan,
     validationResult: mergedValidationResult,
   });
+
+  // Step 2.5: Compute runtime diff (Phase 21)
+  steps.push({
+    name: "Compute runtime diff",
+    details: {
+      beforePlacementCount: baselineWorldView.placements.length,
+      afterPlacementCount: worldView.placements.length,
+    },
+  });
+  const runtimeDiff = diffRuntimeWorldViews(baselineWorldView, worldView);
 
   // Count valid/invalid/warning placements
   let validCount = 0;
@@ -175,6 +252,37 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
     samplePosition,
     3
   );
+
+  // Step 3.5: Build Runtime Linking Index (Phase 20)
+  steps.push({
+    name: "Build Runtime Linking Index",
+    details: {
+      regionCount: fixture.regions.length,
+      placementCount: fixture.placements.length,
+    },
+  });
+  const linkingIndex = buildRuntimeLinkingIndex(
+    fixture.regions,
+    fixture.placements
+  );
+
+  // Step 3.6: Runtime invariants check (Phase 22)
+  const invariantReport = checkRuntimeInvariants({
+    worldView,
+    spatialIndex,
+    diff: runtimeDiff,
+    validationResult: mergedValidationResult,
+    linkingIndex,
+  });
+
+  steps.push({
+    name: "Runtime invariants check",
+    details: {
+      violationCount: invariantReport.violations.length,
+      hasErrors: invariantReport.hasErrors,
+      hasWarnings: invariantReport.hasWarnings,
+    },
+  });
 
   // Step 4: Region streaming stubs
   steps.push({ name: "Region streaming stubs" });
@@ -216,6 +324,23 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
     onlyValid: true,
   });
 
+  // Build linkingSummary (Phase 20)
+  const samplePlacementLinkages = Object.values(linkingIndex.byPlacementId)
+    .slice(0, 3)
+    .map((linkage) => ({
+      placementId: linkage.placementId,
+      usdPrimPath: linkage.usdPrimPath,
+      planNodeId: linkage.planNodeId,
+    }));
+
+  const sampleRegionLinkages = Object.values(linkingIndex.byRegionId)
+    .slice(0, 1)
+    .map((linkage) => ({
+      regionId: linkage.regionId,
+      usdPrimPath: linkage.usdPrimPath,
+      planNodeId: linkage.planNodeId,
+    }));
+
   // Build result
   const result: PlaygroundResult = {
     worldViewSummary: {
@@ -246,6 +371,32 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
     engineApplySummary: {
       adapterId: engineResult.adapterId,
       instanceCount: engineResult.instances.length,
+    },
+    linkingSummary: {
+      samplePlacements: samplePlacementLinkages,
+      sampleRegions: sampleRegionLinkages,
+    },
+    diffSummary: {
+      addedCount: runtimeDiff.added.length,
+      removedCount: runtimeDiff.removed.length,
+      updatedCount: runtimeDiff.updated.length,
+      sampleUpdated: runtimeDiff.updated[0]
+        ? {
+            placementId: runtimeDiff.updated[0].placementId,
+            before: runtimeDiff.updated[0].before,
+            after: runtimeDiff.updated[0].after,
+          }
+        : undefined,
+    },
+    invariantSummary: {
+      hasErrors: invariantReport.hasErrors,
+      hasWarnings: invariantReport.hasWarnings,
+      violationCount: invariantReport.violations.length,
+      sampleViolations: invariantReport.violations.slice(0, 3).map((v) => ({
+        id: v.id,
+        severity: v.severity,
+        message: v.message,
+      })),
     },
     steps,
   };

@@ -502,6 +502,134 @@ The game runtime may consume baked USD representations:
 - Implement runtime USD consumption
 - Add USD validation and optimization tools
 
+## Runtime Linkage (Phase 20)
+
+### Purpose
+
+Phase 20 establishes introspection linkages between runtime placements and their corresponding USD prim paths. This enables debugging, tooling, and cross-layer analysis without requiring actual USD file I/O or SDK integration.
+
+### Linkage Model
+
+Every runtime placement can be linked to its USD prim path using pure derivation functions:
+
+**Placement → USD Prim Path:**
+
+```typescript
+// Example linkage
+placementId: "placement-005"
+→ usdPrimPath: "/World/Regions/region-main/Spaces/space-classroom/Placements/Placement_placement-005"
+```
+
+**Region → USD Prim Path:**
+
+```typescript
+// Example linkage
+regionId: "region-main"
+→ usdPrimPath: "/World/Regions/region-main"
+```
+
+**Space → USD Prim Path:**
+
+```typescript
+// Example linkage
+spaceId: "space-classroom"
+regionId: "region-main"
+→ usdPrimPath: "/World/Regions/region-main/Spaces/space-classroom"
+```
+
+### Derivation Functions
+
+The linking module (`src/shared/linking/runtime_linking.ts`) provides pure functions to derive USD prim paths:
+
+```typescript
+// Derive USD prim path for a placement
+function deriveUsdPrimPathForPlacement(
+  regionId: string,
+  spaceId: string,
+  placementId: PlacementId
+): string {
+  return `/World/Regions/${regionId}/Spaces/${spaceId}/Placements/Placement_${placementId}`;
+}
+
+// Derive USD prim path for a region
+function deriveUsdPrimPathForRegion(regionId: string): string {
+  return `/World/Regions/${regionId}`;
+}
+
+// Derive USD prim path for a space
+function deriveUsdPrimPathForSpace(regionId: string, spaceId: string): string {
+  return `/World/Regions/${regionId}/Spaces/${spaceId}`;
+}
+```
+
+### Runtime Linking Index
+
+The `RuntimeLinkingIndex` provides fast lookup of USD prim paths for any placement, region, or space:
+
+```typescript
+interface RuntimeLinkingIndex {
+  readonly byPlacementId: Record<
+    PlacementId,
+    {
+      readonly placementId: PlacementId;
+      readonly usdPrimPath: string;
+      readonly planNodeId: PlanNodeId;
+    }
+  >;
+  readonly byRegionId: Record<
+    string,
+    {
+      readonly regionId: string;
+      readonly usdPrimPath: string;
+      readonly planNodeId: PlanNodeId;
+    }
+  >;
+  readonly bySpaceId: Record<
+    string,
+    {
+      readonly spaceId: string;
+      readonly regionId: string;
+      readonly usdPrimPath: string;
+      readonly planNodeId: PlanNodeId;
+    }
+  >;
+}
+```
+
+### Use Cases
+
+**Debug Tooling:**
+
+- Trace runtime placement back to USD prim for inspection
+- Visualize USD hierarchy in debug UI
+- Cross-reference validation issues with USD prims
+
+**Asset Binding:**
+
+- Attach USD prim path to asset bindings for debugging
+- Enable USD-aware asset loading strategies
+- Support USD-based asset caching
+
+**Cross-Layer Analysis:**
+
+- Link runtime state to USD layers
+- Analyze layer composition impact on runtime
+- Debug layer priority and overrides
+
+### Design Constraints
+
+- **Introspection Only**: No actual USD file I/O or SDK calls
+- **Pure Derivation**: All linkages derived from IDs, no persistence
+- **Deterministic**: Same input always produces same USD prim path
+- **No Breaking Changes**: Linkage is additive, doesn't modify existing types
+
+### Future Enhancements
+
+- **Actual USD File Generation**: Write USD files with derived prim paths
+- **USD SDK Integration**: Validate derived paths against actual USD stage
+- **Layer Composition**: Trace runtime state to specific USD layers
+- **USD Metadata Extraction**: Read Believe metadata from USD prims
+
 ## Future Considerations
 
 - **USD Schema Extensions**: Custom Believe USD schemas for validation

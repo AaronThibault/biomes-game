@@ -798,6 +798,57 @@ This file is append-only: new phases are added chronologically without modifying
 - applyCommitPlan: Processes ADD/UPDATE/REMOVE changes sequentially
 - applyValidationResult: Sets isValid, hasWarnings, validationIssueIds based on issues
 - buildRuntimeWorldView: Applies commit plan then validation result
+
+---
+
+## Phase 22 — Runtime Invariant Checks & Consistency Harness
+
+**Completed:** 2025-11-26
+
+### Intent Summary
+
+- Implement a pure, deterministic invariant checker for the runtime stack
+- Verify consistency across WorldView, SpatialIndex, Diff, Validation, and Linking
+- Ensure "crash early" detection of impossible states or data corruption
+- Integrate into the golden path playground for continuous verification
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_playground_model.md` — Updated with invariant check step
+
+**Shared Types:**
+
+- `src/shared/runtime/runtime_invariants.ts` — Invariant types and check logic
+
+**Tools:**
+
+- `tools/runtime_playground/playground.ts` — Integrated invariant checks
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Pure functions only (no side effects)
+- Deterministic output
+- No I/O or external dependencies
+- Additive-only changes
+
+**Invariant Categories:**
+
+- **WorldView**: Placement ID uniqueness, region/space existence
+- **Spatial Index**: Region/space query consistency
+- **Diff**: Disjoint added/removed/updated sets
+- **Validation**: Referential integrity (issues reference existing placements)
+- **Linking**: Key existence and non-empty strings
+
+### Completion Notes
+
+- Implemented `checkRuntimeInvariants` with comprehensive checks
+- Integrated into playground pipeline after diff/linking steps
+- Populated `invariantSummary` in playground result
+- Verified all checks are additive and non-breaking
 - All helpers are internal (not exported)
 
 **Integration Boundaries:**
@@ -1318,15 +1369,51 @@ This file is append-only: new phases are added chronologically without modifying
 - ValidationService wired: All three stub functions now use baseline rules
 - Playground updated: Dynamically runs validation and merges results
 - Playground fixture simplified: No hard-coded ValidationResult
-- All validation is pure, deterministic, and engine-agnostic
-- Future work: advanced spatial checks, permission validation, asset/space existence, performance optimization, configuration, PlanGraph integration
+
+**Linkage Derivation:**
+
+- **USD Prim Paths**: `/World/Regions/{regionId}/Spaces/{spaceId}/Placements/Placement_{placementId}`
+- **PlanGraph Node IDs**: `placement-{placementId}`, `region-{regionId}`, `space-{spaceId}`
+- **Pure Functions**: All linkages derived from IDs, no external data
+- **Fast Lookup**: `RuntimeLinkingIndex` provides O(1) lookup by ID
+
+**Playground Integration:**
+
+- New `linkingSummary` field in `PlaygroundResult`
+- Sample placements and regions with full linkage data
+- Demonstrates USD ↔ PlanGraph ↔ Runtime connections
+- JSON output includes USD prim paths and PlanGraph node IDs
+
+**Non-Goals:**
+
+- Actual USD file generation or SDK integration
+- Actual .plan file reading or writing
+- Asset binding enrichment (kept as metadata-only)
+- Debug event enrichment (future enhancement)
+
+### Completion Notes
+
+- `RuntimeLinkingIndex`: Fast lookup structure for placements, regions, spaces
+- `LinkedRuntimePlacementView`: Tooling-only type for decorated runtime views
+- Derivation functions: Pure, deterministic USD/PlanGraph ID generation
+- Playground `linkingSummary`: Demonstrates 3 sample placements + 1 sample region
+- All changes additive: No breaking changes to existing types
+- Baseline world view (before commit) vs. world view (after commit)
+- `diffSummary` in `PlaygroundResult` with counts and sample
+- Demonstrates deterministic diff computation in JSON output
+
+### Completion Notes
+
+- `RuntimeWorldDiff`: Contains added, removed, updated arrays
+- `areRuntimePlacementsEqual()`: Deep structural comparison helper
+- `diffRuntimeWorldViews()`: Main diff function with O(1) lookup via Maps
+- Engine adapter `computeDiff()`: Now uses real diff engine instead of stub
+- Playground Step 2.5: Computes diff between baseline and final world views
+- All arrays canonically ordered by placementId ascending
+- Future work: Epsilon tolerances for floating-point, diff optimization, incremental diffs
 
 ---
 
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.
-
-```
-
-```

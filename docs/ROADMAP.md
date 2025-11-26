@@ -559,11 +559,112 @@ npx ts-node tools/runtime_playground/playground.ts
 - [docs/validation_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/validation_model.md) — Phase 19 section added
 - [docs/runtime_playground_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_playground_model.md) — Updated for real validation
 
+---
+
+## 20.0 USD ↔ PlanGraph ↔ Runtime Linkage (Introspection Wiring Only)
+
+**Objective:** Wire together USD, PlanGraph, and Runtime layers for introspection without SDK calls, I/O, or persistence.
+
+**Scope:**
+
+- Create runtime linking module with pure derivation functions
+- Build linking index for fast lookups
+- Wire into playground with linkingSummary output
+- Update documentation to reflect linkage integration
+
+**Deliverables:**
+
+- Runtime linking module with USD/PlanGraph derivation
+- Playground integration with linkingSummary
+- Documentation updates across 5 files
+
+**Output:**
+
+- [src/shared/linking/runtime_linking.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/linking/runtime_linking.ts) — Runtime linking module
+- [tools/runtime_playground/playground.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/playground.ts) — Playground with linkingSummary
+- [docs/usd_integration_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/usd_integration_model.md) — Runtime Linkage section added
+- [docs/plan_graph_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/plan_graph_model.md) — Runtime Introspection section added
+- [docs/runtime_playground_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_playground_model.md) — Phase 20 linkage integration
+
+**Validation Rules:**
+
+- **USD Prim Path Derivation**: `/World/Regions/{regionId}/Spaces/{spaceId}/Placements/Placement_{placementId}`
+- **PlanGraph Node ID Derivation**: `placement-{placementId}`, `region-{regionId}`, `space-{spaceId}`
+- **Introspection Only**: No USD SDK, no .plan file I/O, pure derivation
+- **Deterministic**: Same input always produces same linkages
+
+---
+
+## 21.0 Deterministic Runtime Diff Engine
+
+**Objective:** Implement pure, deterministic diff engine for comparing RuntimeWorldViews.
+
+**Scope:**
+
+- Create runtime_diff.ts with diff logic
+- Update engine adapter to use diff engine
+- Enhance playground with diff computation
+- Update documentation
+
+**Deliverables:**
+
+- Diff engine with canonical ordering
+- Engine adapter using real diff
+- Playground with diffSummary output
+
+**Output:**
+
+- [src/shared/runtime/runtime_diff.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/runtime_diff.ts) — Diff engine
+- [src/shared/runtime/engine_adapter_service.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/engine_adapter_service.ts) — Uses diff engine
+- [tools/runtime_playground/playground.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/playground.ts) — Computes and displays diff
+- Documentation updates (3 files)
+
+**Diff Rules:**
+
+- **Added**: placementId in `after` but not in `before`
+- **Removed**: placementId in `before` but not in `after`
+- **Updated**: placementId in both, but structurally different
+- **Canonical Ordering**: All arrays sorted by placementId ascending
+- **Deterministic**: Same inputs always produce same output
+
 **Validation Rules:**
 
 - **Structural**: Missing IDs, transform sanity (NaN/Infinity), scale bounds (≤0 error, >1000 warning)
 - **Referential**: Region existence, commit plan references (UPDATE/REMOVE existing, ADD non-duplicate)
 - **Spatial**: Point-based overlap detection (exact position match)
+
+---
+
+## 22.0 Runtime Invariant Checks & Consistency Harness
+
+**Objective:** Implement pure, deterministic invariant checker for runtime consistency.
+
+**Scope:**
+
+- Create runtime_invariants.ts with check logic
+- Verify WorldView, SpatialIndex, Diff, Validation, and Linking consistency
+- Integrate into playground pipeline
+- Update documentation
+
+**Deliverables:**
+
+- Invariant checker module
+- Playground integration with invariantSummary
+- Documentation updates
+
+**Output:**
+
+- [src/shared/runtime/runtime_invariants.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/runtime_invariants.ts) — Invariant checker
+- [tools/runtime_playground/playground.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/playground.ts) — Runs invariant checks
+- Documentation updates (3 files)
+
+**Invariant Categories:**
+
+- **WorldView**: ID uniqueness, region/space existence
+- **Spatial Index**: Region/space query consistency
+- **Diff**: Disjoint added/removed/updated sets
+- **Validation**: Referential integrity
+- **Linking**: Key existence and non-empty strings
 
 ---
 

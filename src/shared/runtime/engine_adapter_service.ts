@@ -5,6 +5,8 @@
  * implementation. Phase 16 provides stub only — actual engine integrations
  * (Biomes ECS, UE, Unity, etc.) will be added in future phases.
  *
+ * Phase 21: Updated computeDiff to use deterministic diff engine.
+ *
  * No Biomes imports, no ECS, no engine SDKs, no I/O, no networking.
  */
 
@@ -130,20 +132,24 @@ export function createNoopEngineAdapter(
       next: RuntimeWorldView,
       options?: EngineApplyOptions
     ): Promise<EngineApplyResult> {
-      // No-op: return empty result
+      // Phase 21: Use deterministic diff engine
+      const diff = diffRuntimeWorldViews(previous, next);
+
       return {
         adapterId: id,
-        appliedWorldVersion: options?.dryRun ? "dry-run" : "noop",
-        instances: [],
-        added: [],
-        updated: [],
-        removed: [],
+        appliedWorldVersion: "diff-computed",
+        instances: [], // Still no engine integration
+        added: diff.added.map((d) => ({ placementId: d.placementId })),
+        updated: diff.updated.map((d) => ({ placementId: d.placementId })),
+        removed: diff.removed.map((d) => ({ placementId: d.placementId })),
         diagnostics: {
-          notes:
-            "No-op adapter: computeDiff did not compute or apply any diff.",
+          notes: "Deterministic diff computed successfully (Phase 21).",
           metadata: {
             previousPlacementCount: previous.placements.length,
             nextPlacementCount: next.placements.length,
+            addedCount: diff.added.length,
+            updatedCount: diff.updated.length,
+            removedCount: diff.removed.length,
             options,
           },
         },

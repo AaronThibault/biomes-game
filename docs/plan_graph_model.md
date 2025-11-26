@@ -424,6 +424,101 @@ To fully understand the world:
 - Add AI integration for intent extraction
 - Build UI for viewing and editing .plan files
 
+## Runtime Introspection (Phase 20)
+
+### Purpose
+
+Phase 20 enables runtime introspection by linking runtime placements to their PlanGraph node IDs. This allows debugging tools, analytics, and AI systems to trace runtime state back to design intent without requiring actual .plan file I/O.
+
+### Linkage Model
+
+Every runtime placement can be linked to its PlanGraph node ID using pure derivation functions:
+
+**Placement → PlanNodeId:**
+
+```typescript
+// Example linkage
+placementId: "placement-005"
+→ planNodeId: "placement-placement-005"
+```
+
+**Region → PlanNodeId:**
+
+```typescript
+// Example linkage
+regionId: "region-main"
+→ planNodeId: "region-region-main"
+```
+
+**Space → PlanNodeId:**
+
+```typescript
+// Example linkage
+spaceId: "space-classroom"
+→ planNodeId: "space-space-classroom"
+```
+
+### Derivation Functions
+
+The linking module (`src/shared/linking/runtime_linking.ts`) provides pure functions to derive PlanGraph node IDs:
+
+```typescript
+// Derive PlanGraph node ID for a placement
+function derivePlanNodeIdForPlacement(placementId: PlacementId): PlanNodeId {
+  return `placement-${placementId}`;
+}
+
+// Derive PlanGraph node ID for a region
+function derivePlanNodeIdForRegion(regionId: string): PlanNodeId {
+  return `region-${regionId}`;
+}
+
+// Derive PlanGraph node ID for a space
+function derivePlanNodeIdForSpace(spaceId: string): PlanNodeId {
+  return `space-${spaceId}`;
+}
+```
+
+### Use Cases
+
+**Debug Tooling:**
+
+- Trace runtime placement back to PlanGraph node for intent lookup
+- Display design reasoning in debug UI
+- Cross-reference validation issues with design intent
+
+**Analytics:**
+
+- Track which placements are most frequently modified
+- Analyze design intent vs. actual usage patterns
+- Measure alignment between intent and implementation
+
+**AI Integration:**
+
+- Provide design context to AI assistants
+- Enable intent-aware suggestions and modifications
+- Support automated design documentation
+
+**Cross-Layer Analysis:**
+
+- Link runtime state to PlanGraph history
+- Analyze how design intent evolved over time
+- Debug discrepancies between intent and implementation
+
+### Design Constraints
+
+- **Introspection Only**: No actual .plan file I/O or persistence
+- **Pure Derivation**: All linkages derived from IDs, no external data
+- **Deterministic**: Same input always produces same PlanNodeId
+- **No Breaking Changes**: Linkage is additive, doesn't modify existing types
+
+### Future Enhancements
+
+- **Actual .plan File Reading**: Load design intent from .plan files
+- **Intent Validation**: Verify runtime state matches design intent
+- **Intent-Aware Debugging**: Show design reasoning in debug tools
+- **AI Intent Extraction**: Generate design intent from runtime behavior
+
 ## Future Considerations
 
 - **AI-Generated Intent**: Extract design intent from commits and edits
