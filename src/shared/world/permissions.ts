@@ -34,6 +34,18 @@ export enum Capability {
   MANAGE_SESSION = "MANAGE_SESSION",
   /** Permission to bypass normal access controls */
   OVERRIDE_ACCESS = "OVERRIDE_ACCESS",
+  /** Permission to edit asset placements in spaces/regions */
+  EDIT_PLACEMENTS = "EDIT_PLACEMENTS",
+  /** Permission to approve and apply placement commits */
+  MANAGE_COMMITS = "MANAGE_COMMITS",
+  /** Permission to validate placements and commits */
+  VALIDATE_PLACEMENTS = "VALIDATE_PLACEMENTS",
+  /** Permission to manage collaborative editing sessions */
+  MANAGE_COLLABORATION = "MANAGE_COLLABORATION",
+  /** Permission to manage USD integration and layer composition */
+  MANAGE_USD_INTEGRATION = "MANAGE_USD_INTEGRATION",
+  /** Permission to manage PlanGraph and .plan files */
+  MANAGE_PLAN_GRAPH = "MANAGE_PLAN_GRAPH",
 }
 
 /**
