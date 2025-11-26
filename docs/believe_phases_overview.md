@@ -1166,6 +1166,167 @@ This file is append-only: new phases are added chronologically without modifying
 
 ---
 
+## Phase 18 — Runtime Integration Playground & Golden Path Harness
+
+**Completed:** 2025-11-26
+
+### Intent Summary
+
+- Create self-contained, deterministic end-to-end runtime harness
+- Exercise entire Believe runtime pipeline (Phases 1–17)
+- Validate runtime stack coherence without engine integration
+- Output JSON summary to console for verification
+- No ECS, no networking, no I/O beyond console logging
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_playground_model.md` — Playground model and golden path documentation
+
+**Playground Tools:**
+
+- `tools/runtime_playground/world_fixture.ts` — Deterministic world fixture
+- `tools/runtime_playground/playground.ts` — Playground harness and pipeline execution
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Self-contained, no external dependencies
+- Deterministic fixtures with no randomness
+- Console-only output (JSON summary)
+- No engine integration (Biomes, UE, Unity, WebGL)
+- No I/O (filesystem, network, database)
+- No build system changes
+
+**Non-Goals:**
+
+- Engine integration or ECS
+- Filesystem or network I/O
+- Randomness or non-deterministic behavior
+- Build system changes
+
+**Fixture Contents:**
+
+- 1 region (region-main)
+- 2 spaces (space-hub, space-classroom)
+- 5 placements with fixed IDs, assets, transforms, tags
+- CommitPlan with ADD, UPDATE, REMOVE changes
+- ValidationResult with WARNING and ERROR issues
+
+**Pipeline Steps:**
+
+1. Build world fixture
+2. Build RuntimeWorldView (with commit and validation)
+3. Build RuntimeSpatialIndex
+4. Region streaming stubs (snapshot creation)
+5. Debug snapshot stub
+6. Asset binding stubs (binding creation, missing detection)
+7. No-op engine adapter (world view application)
+
+### Completion Notes
+
+- RuntimePlaygroundFixture: Deterministic world data (regions, placements, commit, validation)
+- buildRuntimePlaygroundFixture: Creates hard-coded fixture with 5 placements
+- PlaygroundResult: JSON summary with worldView, spatialIndex, streaming, debug, assets, engine summaries
+- runRuntimePlayground: Executes complete pipeline and returns result
+- Console output: JSON printed to stdout when run directly
+- How to run: `npx ts-node tools/runtime_playground/playground.ts`
+- Exit code: 0 for success, 1 for error
+- Future work: performance benchmarks, visual output, scenario library, comparison tool, CI integration, property-based testing
+
+---
+
+## Phase 19 — Baseline Validation Rules & Playground Wiring
+
+**Completed:** 2025-11-26
+
+### Intent Summary
+
+- Implement real, deterministic validation logic to replace Phase 7 stubs
+- Wire validation service to use baseline validation rules
+- Update runtime playground to use real validation instead of synthetic results
+- Provide minimal but useful set of validation checks (structural, referential, spatial)
+- Maintain pure TypeScript, engine-agnostic implementation
+
+### Key Artifacts
+
+**Implementation:**
+
+- `src/shared/world/validation/baseline_rules.ts` — Baseline validation implementation
+
+**Modified Files:**
+
+- `src/shared/world/validation/validation_service.ts` — Wired to baseline rules
+- `tools/runtime_playground/world_fixture.ts` — Removed synthetic validation
+- `tools/runtime_playground/playground.ts` — Uses real validation
+
+**Documentation:**
+
+- `docs/validation_model.md` — Extended with Phase 19 section
+- `docs/runtime_playground_model.md` — Updated for real validation
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Additive-only changes (no modifications to existing public types)
+- Pure TypeScript with no side effects
+- Deterministic output for same input
+- No engine, ECS, or runtime dependencies
+- No I/O, networking, or persistence
+
+**Non-Goals:**
+
+- Advanced collision/overlap detection (distance thresholds, volumes, AABBs)
+- Per-capability/permission-based validation
+- Performance tuning (batching, early exit, caching)
+- Configuration-driven rule sets
+- PlanGraph-aware intent validation
+- Rich debug events for validation issues
+
+**Baseline Validation Rules:**
+
+**Structural (7 checks):**
+
+- Missing placementId → ERROR
+- Missing assetId → ERROR
+- Position NaN/Infinity → ERROR
+- Rotation NaN/Infinity → ERROR
+- Scale NaN/Infinity → ERROR
+- Scale ≤ 0 → ERROR
+- Scale > 1000 → WARNING
+
+**Referential (4 checks):**
+
+- Region existence → ERROR if not found
+- Commit UPDATE reference → ERROR if placement doesn't exist
+- Commit REMOVE reference → ERROR if placement doesn't exist
+- Commit ADD duplicate → ERROR if placementId already exists
+
+\*\*Spatial (1 check):
+
+- Point overlap → WARNING for placements at identical position
+
+### Completion Notes
+
+- BaselineValidationContext: Minimal world state (regions, placements)
+- validatePlacementsBaseline: Validates collection of placements
+- validateCommitPlanBaseline: Validates commit plan against world state
+- validatePlacementChangeBaseline: Validates single placement change
+- ValidationService wired: All three stub functions now use baseline rules
+- Playground updated: Dynamically runs validation and merges results
+- Playground fixture simplified: No hard-coded ValidationResult
+- All validation is pure, deterministic, and engine-agnostic
+- Future work: advanced spatial checks, permission validation, asset/space existence, performance optimization, configuration, PlanGraph integration
+
+---
+
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.
+
+```
+
+```

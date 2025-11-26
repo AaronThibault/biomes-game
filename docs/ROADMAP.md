@@ -505,6 +505,68 @@ This includes:
 
 ---
 
+## 18.0 Runtime Integration Playground & Golden Path Harness
+
+Self-contained deterministic end-to-end runtime harness that exercises the entire
+Believe runtime pipeline (Phases 1–17) without engine integration, ECS, networking,
+or I/O beyond console logging.
+
+This includes:
+
+- Hard-coded fixture (regions, placements, commit/validation)
+- Pipeline execution: worldView → spatialIndex → streaming → debug → assets → engineAdapter
+- JSON PlaygroundResult output to stdout
+- Deterministic, reproducible output
+
+**Output:**
+
+- [docs/runtime_playground_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_playground_model.md) — Playground model and golden path documentation
+- [tools/runtime_playground/world_fixture.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/world_fixture.ts) — Deterministic world fixture
+- [tools/runtime_playground/playground.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/playground.ts) — Playground harness and pipeline execution
+
+**How to run:**
+
+```bash
+npx ts-node tools/runtime_playground/playground.ts
+```
+
+---
+
+## 19.0 Baseline Validation Rules & Playground Wiring
+
+**Objective:** Implement real, deterministic validation logic and wire it into the runtime playground.
+
+**Scope:**
+
+- Create baseline validation rules module
+- Wire validation service to use baseline rules
+- Update playground to use real validation
+- Update documentation
+
+**Deliverables:**
+
+- Baseline validation rules (structural, referential, spatial)
+- Wired validation service
+- Updated playground fixture and harness
+- Documentation updates
+
+**Output:**
+
+- [src/shared/world/validation/baseline_rules.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/validation/baseline_rules.ts) — Baseline validation implementation
+- [src/shared/world/validation/validation_service.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/validation/validation_service.ts) — Wired to baseline rules
+- [tools/runtime_playground/world_fixture.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/world_fixture.ts) — Removed synthetic validation
+- [tools/runtime_playground/playground.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/playground.ts) — Uses real validation
+- [docs/validation_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/validation_model.md) — Phase 19 section added
+- [docs/runtime_playground_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_playground_model.md) — Updated for real validation
+
+**Validation Rules:**
+
+- **Structural**: Missing IDs, transform sanity (NaN/Infinity), scale bounds (≤0 error, >1000 warning)
+- **Referential**: Region existence, commit plan references (UPDATE/REMOVE existing, ADD non-duplicate)
+- **Spatial**: Point-based overlap detection (exact position match)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

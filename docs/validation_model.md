@@ -252,3 +252,168 @@ Each validation issue contains:
 - **Batch Validation**: Validate multiple placements efficiently
 - **Validation Visualization**: Show validation issues in editor UI
 - **Auto-Fix Suggestions**: Provide automated fixes for common issues
+
+---
+
+## Phase 19 — Baseline Validation Rules
+
+### Purpose
+
+Phase 19 introduces **real, deterministic validation logic** to replace the stub implementations from Phase 7. The baseline rules provide a minimal but useful set of checks that are clearly correct and serve as the foundation for more sophisticated validation in future phases.
+
+### Scope
+
+**Baseline validation includes:**
+
+1. **Structural Rules** - Data integrity and sanity checks
+2. **Referential Rules** - Entity existence verification
+3. **Spatial Rules** - Simple point-based overlap detection
+
+**Explicitly out-of-scope:**
+
+- Real collision/overlap detection (distance thresholds, volumes, AABBs)
+- Per-capability/permission-based validation
+- Performance tuning (batching, early exit, caching)
+- Configuration-driven rule sets
+- PlanGraph-aware intent validation
+- Rich debug events for validation issues
+
+### Baseline Validation Context
+
+```typescript
+interface BaselineValidationContext {
+  readonly regions: readonly Region[];
+  readonly placements: readonly AssetPlacement[];
+}
+```
+
+The context provides the minimal world state needed for validation without requiring engine, ECS, or runtime dependencies.
+
+### Validation Functions
+
+#### validatePlacementsBaseline
+
+Validates a collection of placements using baseline rules.
+
+**Checks:**
+
+- Structural sanity (missing IDs, transform validity, scale bounds)
+- Referential integrity (region existence)
+- Spatial overlap (point-based)
+
+**Returns:** `ValidationResult` with all detected issues
+
+#### validateCommitPlanBaseline
+
+Validates a commit plan against current world state.
+
+**Checks:**
+
+- All placement changes in the plan
+- ADD: No duplicate placementId
+- UPDATE: Referenced placement exists
+- REMOVE: Referenced placement exists
+
+**Returns:** `ValidationResult` with aggregated issues from all changes
+
+#### validatePlacementChangeBaseline
+
+Validates a single placement change (ADD, UPDATE, or REMOVE).
+
+**Returns:** `ValidationResult` for the specific change
+
+### Baseline Rules
+
+#### Structural Rules (ValidationType.STRUCTURAL)
+
+| Check                 | Severity | Description                                |
+| --------------------- | -------- | ------------------------------------------ |
+| Missing placementId   | ERROR    | Placement has missing or empty `id`        |
+| Missing assetId       | ERROR    | Placement has missing or empty `assetId`   |
+| Position NaN/Infinity | ERROR    | Transform position contains invalid values |
+| Rotation NaN/Infinity | ERROR    | Transform rotation contains invalid values |
+| Scale NaN/Infinity    | ERROR    | Transform scale contains invalid values    |
+| Scale ≤ 0             | ERROR    | Transform scale must be positive           |
+| Scale > 1000          | WARNING  | Transform scale unusually large            |
+
+#### Referential Rules (ValidationType.REFERENTIAL)
+
+| Check                   | Severity | Description                                    |
+| ----------------------- | -------- | ---------------------------------------------- |
+| Region existence        | ERROR    | Placement references nonexistent `regionId`    |
+| Commit UPDATE reference | ERROR    | UPDATE change references nonexistent placement |
+| Commit REMOVE reference | ERROR    | REMOVE change references nonexistent placement |
+| Commit ADD duplicate    | ERROR    | ADD change uses duplicate `placementId`        |
+
+#### Spatial Rules (ValidationType.SPATIAL)
+
+| Check         | Severity | Description                               |
+| ------------- | -------- | ----------------------------------------- |
+| Point overlap | WARNING  | Multiple placements at identical position |
+
+**Note:** Spatial validation is intentionally simple (exact position match only). Future phases will add distance thresholds, bounding volumes, and proper collision detection.
+
+### Integration with ValidationService
+
+Phase 19 wires the baseline rules into the existing validation service:
+
+```typescript
+// validation_service.ts
+export async function validateDraftPlacementStub(
+  input: DraftPlacementValidationInput
+): Promise<ValidationResult> {
+  const ctx: BaselineValidationContext = {
+    regions: [],
+    placements: [...(input.livePlacements ?? []), input.draft.base],
+  };
+  return validatePlacementsBaseline(ctx);
+}
+```
+
+All three service functions (`validateDraftPlacementStub`, `validateCommitPlanStub`, `validatePlacementChangeStub`) now use baseline validation instead of returning empty results.
+
+### Runtime Playground Integration
+
+The runtime playground (Phase 18) now exercises real validation:
+
+1. Build world fixture (regions, placements, commit plan)
+2. **Run baseline validation** on placements and commit plan
+3. Merge validation results
+4. Pass merged result to `buildRuntimeWorldView`
+5. Continue with spatial index, streaming, debug, asset binding, engine adapter
+
+The playground JSON output now includes actual validation issues detected by baseline rules.
+
+### Design Principles
+
+1. **Pure Functions**: All validation logic is pure with no side effects
+2. **Deterministic**: Same input always produces same output
+3. **Engine-Agnostic**: No runtime, physics, or ECS dependencies
+4. **Context-Based**: Dependencies explicit via `BaselineValidationContext`
+5. **Minimal but Useful**: Small set of clearly correct rules
+6. **Composable**: Validate placements, changes, or entire commit plans
+
+### Artifacts
+
+**New Files:**
+
+- `src/shared/world/validation/baseline_rules.ts` - Baseline validation implementation
+
+**Modified Files:**
+
+- `src/shared/world/validation/validation_service.ts` - Wired to baseline rules
+- `tools/runtime_playground/world_fixture.ts` - Removed synthetic validation
+- `tools/runtime_playground/playground.ts` - Uses real validation
+
+### Future Enhancements
+
+Phase 19 establishes the foundation for more sophisticated validation:
+
+- **Advanced Spatial**: Distance thresholds, bounding volumes, AABBs
+- **Permission Checks**: Capability-based validation
+- **Asset Validation**: Verify assetId references exist in asset registry
+- **Space Validation**: Verify spaceId references exist
+- **Performance**: Batching, caching, early exit optimizations
+- **Configuration**: Rule sets, validation profiles
+- **PlanGraph Integration**: Intent-aware validation
+- **Debug Events**: Rich validation issue reporting

@@ -1,17 +1,21 @@
 /**
- * Validation service API surface for Believe's placement and commit validation.
+ * Validation service for Believe's world state.
  *
- * This module defines the interface for validating draft placements, commit plans,
- * and individual placement changes. It provides stub implementations for testing
- * and serves as a contract for future validation service implementations.
+ * This module provides validation functions for draft placements,
+ * commit plans, and placement changes.
  *
- * This phase provides stub implementations only — actual validation logic
- * (spatial checks, permission verification, referential validation) will be
- * added in future phases.
+ * Phase 8: Contract-level service interface with stub implementations.
+ * Phase 19: Wired to baseline validation rules.
  */
 
 import type { PlacementChange } from "@/shared/world/commit";
 import type { AssetPlacement } from "@/shared/world/placement";
+import {
+  type BaselineValidationContext,
+  validateCommitPlanBaseline,
+  validatePlacementChangeBaseline,
+  validatePlacementsBaseline,
+} from "@/shared/world/validation/baseline_rules";
 import type {
   CommitPlanValidationInput,
   DraftPlacementValidationInput,
@@ -69,88 +73,73 @@ export interface ValidationService {
 }
 
 /**
- * Validate a draft placement (stub implementation).
+ * Validate a draft placement (now using baseline rules).
  *
- * This is a pure stub that returns no validation issues.
- * Future implementations will:
- * - Check required fields (assetId, transform, etc.)
- * - Validate transform components (position, rotation, scale)
- * - Verify assetId references existing BelieveAsset
- * - Check regionId/spaceId references exist
- * - Perform spatial bounds checking
- * - Detect collisions with live placements
- * - Verify user has EDIT_PLACEMENTS permission
+ * Validates draft placements using baseline structural, referential,
+ * and spatial rules.
  *
  * @param input - Draft placement validation parameters
- * @returns Promise resolving to validation result (always empty in stub)
+ * @returns Promise resolving to ValidationResult
  */
 export async function validateDraftPlacementStub(
-  _input: DraftPlacementValidationInput
+  input: DraftPlacementValidationInput
 ): Promise<ValidationResult> {
-  // TODO: Replace with real validation logic.
-  // For now, return no issues and isBlocking = false.
+  // Build context with live placements + draft placement
+  const placements: AssetPlacement[] = [
+    ...(input.livePlacements ?? []),
+    input.draft.base,
+  ];
 
-  const result: ValidationResult = {
-    issues: [],
-    isBlocking: false,
+  const ctx: BaselineValidationContext = {
+    regions: [],
+    placements,
   };
 
-  return result;
+  // Use baseline validation
+  return validatePlacementsBaseline(ctx);
 }
 
 /**
- * Validate a commit plan (stub implementation).
+ * Validate a commit plan (now using baseline rules).
  *
- * This is a pure stub that returns no validation issues.
- * Future implementations will:
- * - Validate commit context (session exists, user has MANAGE_COMMITS)
- * - Validate each placement change in the plan
- * - Check for conflicts between changes
- * - Verify atomic consistency (all changes can apply together)
- * - Aggregate issues from all changes
+ * Validates commit plans using baseline structural, referential, and spatial rules.
  *
- * @param input - Commit plan validation parameters
- * @returns Promise resolving to validation result (always empty in stub)
+ * @param input - Commit plan validation input
+ * @returns Promise resolving to ValidationResult
  */
 export async function validateCommitPlanStub(
-  _input: CommitPlanValidationInput
+  input: CommitPlanValidationInput
 ): Promise<ValidationResult> {
-  // TODO: Replace with real validation logic.
-  // For now, return no issues and isBlocking = false.
-
-  const result: ValidationResult = {
-    issues: [],
-    isBlocking: false,
+  // Build context with live placements
+  const ctx: BaselineValidationContext = {
+    regions: [],
+    placements: input.livePlacements,
   };
 
-  return result;
+  // Use baseline validation
+  return validateCommitPlanBaseline(ctx, input);
 }
 
 /**
- * Validate a single placement change (stub implementation).
+ * Validate a single placement change (now using baseline rules).
  *
- * This is a pure stub that returns no validation issues.
- * Future implementations will:
- * - For ADD: validate as new draft placement
- * - For UPDATE: verify source placement exists, validate new state
- * - For REMOVE: verify placement exists and can be removed
- * - Check change-specific constraints
+ * Validates individual placement changes using baseline structural,
+ * referential, and spatial rules.
  *
- * @param change - The placement change to validate
+ * @param change - Placement change to validate
  * @param livePlacements - Current live placements
- * @returns Promise resolving to validation result (always empty in stub)
+ * @returns Promise resolving to ValidationResult
  */
 export async function validatePlacementChangeStub(
-  _change: PlacementChange,
-  _livePlacements: readonly AssetPlacement[]
+  change: PlacementChange,
+  livePlacements: readonly AssetPlacement[]
 ): Promise<ValidationResult> {
-  // TODO: Replace with real validation logic.
-  // For now, return no issues and isBlocking = false.
-
-  const result: ValidationResult = {
-    issues: [],
-    isBlocking: false,
+  // Build context with live placements
+  const ctx: BaselineValidationContext = {
+    regions: [],
+    placements: livePlacements as AssetPlacement[],
   };
 
-  return result;
+  // Use baseline validation
+  return validatePlacementChangeBaseline(ctx, change);
 }
