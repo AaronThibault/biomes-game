@@ -424,6 +424,26 @@ This includes:
 
 ---
 
+## 14.0 Region Streaming & Snapshot Contracts (Contracts Only)
+
+Define snapshot and delta contracts for region/world streaming, without
+implementing networking, persistence, or ECS integration.
+
+This includes:
+
+- StreamingCursor and snapshot/delta types
+- RegionSnapshot and WorldSnapshot for complete state
+- RegionDelta and WorldDelta for incremental changes
+- RegionStreamingService interface with stub implementations
+
+**Output:**
+
+- [docs/region_streaming_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/region_streaming_model.md) — Region/world snapshot & delta model
+- [src/shared/world/region_streaming.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/region_streaming.ts) — Snapshot and delta types
+- [src/shared/world/region_streaming_service.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/region_streaming_service.ts) — Region streaming service API (stubs)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

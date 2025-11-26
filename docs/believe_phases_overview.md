@@ -883,6 +883,74 @@ This file is append-only: new phases are added chronologically without modifying
 
 ---
 
+## Phase 14 — Region Streaming & Snapshot Contracts (Contracts Only)
+
+**Completed:** 2025-11-25
+
+### Intent Summary
+
+- Define snapshot and delta contracts for region/world streaming
+- Support engine streaming, editor preview, and analytics use cases
+- Maintain cursor-driven, transport-agnostic design
+- No networking, no persistence, no ECS integration
+- Enable efficient world state distribution
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/region_streaming_model.md` — Region/world snapshot & delta model
+
+**Shared Types:**
+
+- `src/shared/world/region_streaming.ts` — StreamingCursor, RegionSnapshot, WorldSnapshot, RegionDelta, WorldDelta types
+- `src/shared/world/region_streaming_service.ts` — RegionStreamingService interface and stub implementations
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Contract-only, no implementation
+- No networking or transport layer
+- No persistence or database
+- Stub implementations only
+- Cursor-driven (not timestamp-based)
+
+**Non-Goals:**
+
+- Chunk streaming
+- Interest management
+- Bandwidth optimization
+- Real-time streaming
+- WebSocket server
+- Binary serialization
+
+**Stub Implementations:**
+
+- getRegionSnapshotStub: Returns empty snapshot with synthetic cursor
+- getWorldSnapshotStub: Returns empty world snapshot
+- getRegionDeltaStub: Returns empty delta (no changes)
+- getWorldDeltaStub: Returns empty world delta
+
+**Integration Boundaries:**
+
+- Builds on RuntimePlacementView (Phase 11-12)
+- Provides snapshot/delta contracts for streaming
+- No changes to existing runtime types
+
+### Completion Notes
+
+- StreamingCursor: Opaque position in change history (not timestamp)
+- RegionSnapshot: Complete region state at cursor with all placements
+- WorldSnapshot: Multi-region state at cursor
+- RegionDelta: Incremental changes (added, updated, removed) between cursors
+- WorldDelta: Multi-region deltas
+- RegionStreamingService: Interface with 4 methods (snapshot/delta for region/world)
+- Stub implementations return placeholder data with metadata indicating stub status
+- Future work: actual snapshot generation, delta computation, cursor management, persistence integration, networking, chunk streaming, interest management
+
+---
+
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.
