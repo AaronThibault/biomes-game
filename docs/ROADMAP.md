@@ -484,6 +484,27 @@ This includes:
 
 ---
 
+## 17.0 Runtime Asset Binding & Resource Loading Contracts (Engine-Agnostic)
+
+Define asset binding and resource loading contracts that bridge BelieveAsset and
+RuntimeWorldView to engine-facing asset handles, without integrating with specific
+engine SDKs or performing actual I/O.
+
+This includes:
+
+- RuntimeAssetLoadState enum and binding types
+- RuntimeAssetHandle and RuntimeAssetBinding interfaces
+- RuntimeAssetBindingService interface with stub implementations
+- No engine SDK imports, no I/O, no persistence
+
+**Output:**
+
+- [docs/runtime_asset_binding_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_asset_binding_model.md) — Asset binding model documentation
+- [src/shared/runtime/asset_binding.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/asset_binding.ts) — Asset binding types
+- [src/shared/runtime/asset_binding_service.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/asset_binding_service.ts) — Asset binding service API (stubs)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

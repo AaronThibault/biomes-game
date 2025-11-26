@@ -1095,6 +1095,77 @@ This file is append-only: new phases are added chronologically without modifying
 
 ---
 
+## Phase 17 — Runtime Asset Binding & Resource Loading Contracts (Engine-Agnostic)
+
+**Completed:** 2025-11-25
+
+### Intent Summary
+
+- Bridge BelieveAsset and RuntimeWorldView to engine-facing asset handles
+- Provide stable, engine-neutral surface for asset loading
+- Enable load state visibility and failure handling
+- Support Biomes, UE, Unity, WebGL, and custom engines
+- No engine SDK integration, no I/O, no persistence
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_asset_binding_model.md` — Asset binding model and loading contracts
+
+**Shared Types:**
+
+- `src/shared/runtime/asset_binding.ts` — RuntimeAssetLoadState, RuntimeAssetHandle, RuntimeAssetBinding, RuntimeAssetBindingSet
+- `src/shared/runtime/asset_binding_service.ts` — RuntimeAssetBindingService interface and stub implementations
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Contract-only, no engine integration
+- No Biomes runtime/ECS imports
+- No engine SDK imports (UE, Unity, WebGL, etc.)
+- No I/O (filesystem, network, database)
+- No actual asset loading or streaming
+- Stub implementations only
+
+**Non-Goals:**
+
+- Actual asset loading or streaming
+- Asset cache implementation
+- Engine SDK integration
+- Network/disk I/O
+- Asset pipeline integration
+
+**Stub Implementations:**
+
+- buildRuntimeAssetBindingsStub: Creates UNLOADED bindings for each unique assetId
+- getBindingByIdStub: Returns null (no internal storage)
+- getBindingByAssetIdStub: Returns null (no internal storage)
+- getMissingOrFailedBindingsStub: Filters bindings for missing=true or loadState=FAILED
+
+**Integration Boundaries:**
+
+- Consumes BelieveAsset (Phase 2)
+- Consumes RuntimeWorldView (Phase 11-12)
+- Provides bindings for RuntimeEngineAdapter (Phase 16)
+- Optional USD prim path references (Phase 9)
+- Optional PlanGraph node references (Phase 10)
+- No changes to existing runtime types
+
+### Completion Notes
+
+- RuntimeAssetLoadState enum: UNLOADED, LOADING, READY, FAILED
+- RuntimeAssetHandle: Engine-agnostic resource reference with load state
+- RuntimeAssetBinding: Maps assetId to handles with aggregate load state
+- RuntimeAssetBindingSet: Collection of bindings for world view
+- RuntimeAssetBindingService: Interface with 4 methods (buildBindings, getBindingById, getBindingByAssetId, getMissingOrFailedBindings)
+- Aggregate load state: READY if all handles READY, LOADING if any LOADING, FAILED if any FAILED, UNLOADED if all UNLOADED
+- Optional metadata: sourceType, usdPrimPath, planNodeId for debugging
+- Future work: actual asset loading, asset cache, streaming, engine SDK integration, LOD/variant selection, preloading, resource pooling, format conversion
+
+---
+
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.
