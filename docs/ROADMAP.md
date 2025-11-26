@@ -465,6 +465,25 @@ This includes:
 
 ---
 
+## 16.0 Runtime Engine Adapter Contracts
+
+Define engine-agnostic contracts for consuming RuntimeWorldView in game engines.
+
+This includes:
+
+- EngineAdapterId, EngineApplyMode, and instance ref types
+- EngineApplyOptions and EngineApplyResult types
+- RuntimeEngineAdapter interface
+- No-op stub adapter for testing
+
+**Output:**
+
+- [docs/runtime_engine_adapter_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_engine_adapter_model.md) — Engine adapter concepts and flows
+- [src/shared/runtime/engine_adapter.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/engine_adapter.ts) — Core engine adapter types
+- [src/shared/runtime/engine_adapter_service.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/engine_adapter_service.ts) — Engine adapter interface and no-op stub
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

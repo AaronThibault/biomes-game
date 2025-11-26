@@ -1027,6 +1027,74 @@ This file is append-only: new phases are added chronologically without modifying
 
 ---
 
+## Phase 16 — Runtime Engine Adapter Contracts (Biomes-Agnostic)
+
+**Completed:** 2025-11-25
+
+### Intent Summary
+
+- Define stable, engine-agnostic interface for consuming RuntimeWorldView
+- Enable Biomes, UE, Unity, WebGL, and other engines to integrate
+- Separate world semantics (Believe) from engine implementation
+- Support full rebuild and incremental diff application
+- No ECS integration, no Biomes imports, no engine SDKs
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_engine_adapter_model.md` — Engine adapter concepts and flows
+
+**Shared Types:**
+
+- `src/shared/runtime/engine_adapter.ts` — EngineAdapterId, EngineApplyMode, instance refs, options, results
+- `src/shared/runtime/engine_adapter_service.ts` — RuntimeEngineAdapter interface and no-op stub
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Contract-only, no engine integration
+- No Biomes runtime/ECS imports
+- No engine SDK imports (UE, Unity, etc.)
+- No I/O, networking, or persistence
+- Stub implementation only
+
+**Non-Goals:**
+
+- Biomes runtime integration
+- Asset loading or pipeline
+- Physics or rendering setup
+- Lifecycle management (start/stop engine)
+- Scene management
+
+**Stub Implementation:**
+
+- createNoopEngineAdapter: Returns empty results without modifying engine state
+- applyWorldView: Returns empty instances with diagnostics
+- computeDiff: Returns empty diff without computing actual changes
+
+**Integration Boundaries:**
+
+- Consumes RuntimeWorldView (Phase 11-12)
+- Optionally uses DebugEvent (Phase 15) in diagnostics
+- Works alongside USD (Phase 9) and RegionStreaming (Phase 14)
+- No changes to existing runtime types
+
+### Completion Notes
+
+- EngineAdapterId: Unique identifier for adapter implementations
+- EngineApplyMode enum: FULL (rebuild) or INCREMENTAL (diff)
+- EnginePlacementInstanceRef: Maps placementId to engine instanceId
+- EngineApplyOptions: Filters (regions, spaces, tags, validity), mode, dry-run
+- EngineApplyDiagnostics: Debug events, notes, metadata
+- EngineApplyResult: Adapter ID, version, instances (all/added/updated/removed), diagnostics
+- RuntimeEngineAdapter interface: describe(), applyWorldView(), computeDiff()
+- createNoopEngineAdapter: Factory for no-op stub adapter
+- Future work: Biomes ECS adapter, UE/Unity bridges, asset loading, physics/rendering, lifecycle management, instance pooling, performance optimization
+
+---
+
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.
