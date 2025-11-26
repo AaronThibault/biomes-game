@@ -384,6 +384,46 @@ This includes:
 
 ---
 
+## 12.0 Runtime View Commit & Validation Application (Contracts Only)
+
+Evolve the runtime-facing view to reflect effective placements after commit
+application and to surface validation status per placement.
+
+This includes:
+
+- Apply CommitPlan changes (ADD, UPDATE, REMOVE) to produce effective placements
+- Apply ValidationResult to set validity flags (isValid, hasWarnings, validationIssueIds)
+- Pure, deterministic builder logic with no side effects
+- No ECS, networking, or Biomes runtime integration
+
+**Output:**
+
+- [docs/runtime_view_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_view_model.md) — Extended with commit & validation behavior
+- [src/shared/world/runtime_view_builder.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/runtime_view_builder.ts) — Applies CommitPlan and ValidationResult
+
+---
+
+## 13.0 Runtime Spatial Index (Contracts Only)
+
+Define a pure TypeScript spatial indexing layer for runtime queries,
+including region, space, AABB, nearest, and overlap queries.
+Contracts only — no physics engines, no ECS, no quadtree/octree.
+
+This includes:
+
+- AABB and spatial query types
+- RuntimeSpatialIndex interface with query methods
+- Pure TypeScript builder with stub implementations
+- No external dependencies or engine math libraries
+
+**Output:**
+
+- [docs/runtime_spatial_index_model.md](file:///c:/Gamebridge/Dev/biomes-game/docs/runtime_spatial_index_model.md) — Spatial index model documentation
+- [src/shared/world/runtime_spatial_index.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/runtime_spatial_index.ts) — Spatial index types
+- [src/shared/world/runtime_spatial_index_builder.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/world/runtime_spatial_index_builder.ts) — Spatial index builder (stubs)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

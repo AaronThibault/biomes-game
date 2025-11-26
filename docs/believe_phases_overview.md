@@ -754,6 +754,135 @@ This file is append-only: new phases are added chronologically without modifying
 
 ---
 
+## Phase 12 — Runtime View Commit & Validation Application (Contracts Only)
+
+**Completed:** 2025-11-25
+
+### Intent Summary
+
+- Evolve runtime view to reflect effective placements after commit application
+- Surface validation status per placement with accurate validity flags
+- Enable commit preview and validation preview use cases
+- Maintain pure, deterministic builder logic
+- No ECS, networking, or Biomes runtime integration
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_view_model.md` — Extended with Phase 12 section on commit & validation behavior
+
+**Shared Types (Enhanced):**
+
+- `src/shared/world/runtime_view_builder.ts` — Enhanced with applyCommitPlan and applyValidationResult helpers
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Contract-only, no engine/runtime integration
+- No ECS or Biomes server wiring
+- Pure, deterministic functions with no side effects
+- Backward compatible (no type changes to runtime_view.ts)
+
+**Non-Goals:**
+
+- ECS integration
+- Chunk streaming or spatial indexing
+- Networking or serialization
+- Persistence or caching
+- Biomes-specific runtime hooks
+
+**Implementation Details:**
+
+- applyCommitPlan: Processes ADD/UPDATE/REMOVE changes sequentially
+- applyValidationResult: Sets isValid, hasWarnings, validationIssueIds based on issues
+- buildRuntimeWorldView: Applies commit plan then validation result
+- All helpers are internal (not exported)
+
+**Integration Boundaries:**
+
+- Consumes CommitPlan (Phase 6) and ValidationResult (Phase 7)
+- Produces RuntimeWorldView with effective placements and validity flags
+- No changes to RuntimePlacementView or RuntimeWorldView types
+
+### Completion Notes
+
+- applyCommitPlan processes changes in order: ADD inserts, UPDATE replaces, REMOVE deletes
+- applyValidationResult sets isValid=false for ERROR issues, hasWarnings=true for WARNING issues
+- buildRuntimeWorldView flow: apply commit → map to runtime → apply validation
+- Commit preview and validation preview use cases now functional
+- Combined preview (commit + validation) supported
+- Future work: conflict visualization, issue filtering, incremental application, undo/redo, diff visualization
+
+---
+
+## Phase 13 — Runtime Spatial Index (Contracts Only)
+
+**Completed:** 2025-11-25
+
+### Intent Summary
+
+- Define pure TypeScript spatial indexing layer for runtime queries
+- Support region, space, AABB, nearest, and overlap queries
+- Maintain deterministic, engine-agnostic implementation
+- No physics engines, no ECS, no complex spatial data structures
+- Enable spatial filtering for commit preview and validation
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_spatial_index_model.md` — Spatial index model and query interfaces
+
+**Shared Types:**
+
+- `src/shared/world/runtime_spatial_index.ts` — AABB, RuntimeSpatialQuery, RuntimeSpatialIndex types
+- `src/shared/world/runtime_spatial_index_builder.ts` — buildRuntimeSpatialIndex function (stub queries)
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Contract-only, no engine integration
+- Pure TypeScript with no external dependencies
+- Stub implementations using simple filtering
+- Deterministic, pure functions
+
+**Non-Goals:**
+
+- Quadtree or octree implementation
+- Voxel grids or spatial hashing
+- Physics integration
+- Dynamic streaming
+- Engine math libraries
+- ECS or Biomes runtime hooks
+
+**Stub Query Implementations:**
+
+- getPlacementsInRegion: Filter by regionId
+- getPlacementsInSpace: Filter by spaceId
+- getPlacementsInAABB: Point-in-AABB test using transform.position
+- getNearestPlacements: Euclidean distance sort, return top N
+- getOverlappingPlacements: Same as AABB (treat placements as points)
+
+**Integration Boundaries:**
+
+- Consumes RuntimeWorldView (Phase 12)
+- Produces RuntimeSpatialIndex for spatial queries
+- No changes to existing runtime types
+
+### Completion Notes
+
+- AABB defined with min/max corners
+- RuntimeSpatialIndex interface with 5 query methods
+- buildRuntimeSpatialIndex creates index from RuntimeWorldView
+- All queries use simple filtering and distance checks (no spatial data structures)
+- Placements treated as points (no bounding box overlap tests)
+- Future work: quadtree/octree, spatial hashing, OBB support, frustum culling, raycasting, incremental updates
+
+---
+
 ## Future Phases
 
 Future phases will be appended below in chronological order as they are completed.
