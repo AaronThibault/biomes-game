@@ -668,6 +668,36 @@ npx ts-node tools/runtime_playground/playground.ts
 
 ---
 
+## 23.0 Runtime Scenario Generator (Fixture Factory)
+
+**Objective:** Replace hard-coded world fixture with a deterministic scenario generator.
+
+**Scope:**
+
+- Create `runtime_scenario_generator.ts`
+- Implement deterministic ID and transform generation
+- Implement "Golden Path" preset to reproduce Phase 18 fixture
+- Integrate into playground pipeline
+
+**Deliverables:**
+
+- Scenario generator module
+- Updated playground using generator
+- Documentation updates
+
+**Output:**
+
+- [src/shared/runtime/runtime_scenario_generator.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/runtime_scenario_generator.ts)
+- [tools/runtime_playground/playground.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_playground/playground.ts)
+
+**Key Constraints:**
+
+- Additive-only (no changes to public runtime types)
+- Pure, deterministic functions
+- No synthetic validation generation (relies on Phase 19 baseline)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

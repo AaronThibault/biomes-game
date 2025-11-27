@@ -268,6 +268,29 @@ The playground executes the following pipeline sequentially:
 - Pure, deterministic invariant checking
 - "Crash early" (or report early) philosophy for data integrity
 
+- "Crash early" (or report early) philosophy for data integrity
+
+### 3.8. Scenario Generator Integration (Phase 23)
+
+**Function:** `generateRuntimeScenario(spec)`
+
+**Input:** `RuntimeScenarioSpec` (name, counts, flags)
+
+**Output:** `RuntimeScenario` (Regions, Placements, CommitPlan)
+
+**Provides:**
+
+- Deterministic, parameter-driven world generation
+- "Golden Path" preset for regression testing
+- Configurable complexity for stress testing
+- Pure function implementation (no I/O)
+
+**Key Features:**
+
+- Stable IDs (`region-001`, `placement-001`)
+- Deterministic transforms
+- No synthetic validation generation (relies on Phase 19 baseline)
+
 ## Playground Result
 
 The playground outputs a JSON summary with the following structure:

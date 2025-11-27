@@ -849,6 +849,49 @@ This file is append-only: new phases are added chronologically without modifying
 - Integrated into playground pipeline after diff/linking steps
 - Populated `invariantSummary` in playground result
 - Verified all checks are additive and non-breaking
+
+---
+
+## Phase 23 — Runtime Scenario Generator (Fixture Factory)
+
+**Completed:** 2025-11-26
+
+### Intent Summary
+
+- Replace hard-coded world fixture with a deterministic scenario generator
+- Enable configurable complexity for future stress testing
+- Preserve existing "Golden Path" scenario for regression testing
+- Ensure all generated data is deterministic and reproducible
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_playground_model.md` — Updated with scenario generator details
+
+**Shared Types:**
+
+- `src/shared/runtime/runtime_scenario_generator.ts` — Generator module
+
+**Tools:**
+
+- `tools/runtime_playground/playground.ts` — Integrated generator
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Additive-only (no changes to public runtime types)
+- Pure, deterministic functions (no I/O, no random)
+- No synthetic validation generation (relies on Phase 19 baseline)
+- Consistent ordering of arrays (Regions, Spaces, Placements)
+
+### Completion Notes
+
+- Implemented `generateRuntimeScenario` and `generateGoldenPathScenario`
+- Replaced hard-coded fixture in playground with generator call
+- Verified determinism and correct ID generation
+- Verified no regression in playground output structure
 - All helpers are internal (not exported)
 
 **Integration Boundaries:**

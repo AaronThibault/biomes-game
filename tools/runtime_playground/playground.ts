@@ -22,6 +22,7 @@ import { EngineApplyMode } from "@/shared/runtime/engine_adapter";
 import { createNoopEngineAdapter } from "@/shared/runtime/engine_adapter_service";
 import { diffRuntimeWorldViews } from "@/shared/runtime/runtime_diff";
 import { checkRuntimeInvariants } from "@/shared/runtime/runtime_invariants";
+import { generateGoldenPathScenario } from "@/shared/runtime/runtime_scenario_generator";
 import type { PlacementId } from "@/shared/world/placement";
 import {
   getRegionSnapshotStub,
@@ -29,7 +30,6 @@ import {
 } from "@/shared/world/region_streaming_service";
 import { buildRuntimeSpatialIndex } from "@/shared/world/runtime_spatial_index_builder";
 import { buildRuntimeWorldView } from "@/shared/world/runtime_view_builder";
-import { buildRuntimePlaygroundFixture } from "./world_fixture";
 
 /**
  * Summary of a single playground pipeline step.
@@ -125,18 +125,6 @@ export interface PlaygroundResult {
     }[];
   };
 
-  /** Runtime invariant check summary (Phase 22) */
-  readonly invariantSummary: {
-    readonly hasErrors: boolean;
-    readonly hasWarnings: boolean;
-    readonly violationCount: number;
-    readonly sampleViolations: readonly {
-      readonly id: string;
-      readonly severity: string;
-      readonly message: string;
-    }[];
-  };
-
   /** Pipeline step summaries */
   readonly steps: readonly PlaygroundStepSummary[];
 }
@@ -158,9 +146,12 @@ export interface PlaygroundResult {
 export async function runRuntimePlayground(): Promise<PlaygroundResult> {
   const steps: PlaygroundStepSummary[] = [];
 
-  // Step 1: Build world fixture
-  steps.push({ name: "Build world fixture" });
-  const fixture = buildRuntimePlaygroundFixture();
+  // Step 1: Generate world scenario (Phase 23)
+  steps.push({
+    name: "Generate world scenario",
+    details: { preset: "golden-path" },
+  });
+  const fixture = generateGoldenPathScenario();
 
   // Step 1.5: Run real validation (Phase 19)
   steps.push({ name: "Validate placements and commit plan" });
