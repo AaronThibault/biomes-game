@@ -23,6 +23,10 @@ import { createNoopEngineAdapter } from "@/shared/runtime/engine_adapter_service
 import { diffRuntimeWorldViews } from "@/shared/runtime/runtime_diff";
 import { checkRuntimeInvariants } from "@/shared/runtime/runtime_invariants";
 import { generateGoldenPathScenario } from "@/shared/runtime/runtime_scenario_generator";
+import {
+  buildRuntimeSnapshot,
+  RuntimeSnapshot,
+} from "@/shared/runtime/runtime_snapshot";
 import type { PlacementId } from "@/shared/world/placement";
 import {
   getRegionSnapshotStub,
@@ -30,6 +34,12 @@ import {
 } from "@/shared/world/region_streaming_service";
 import { buildRuntimeSpatialIndex } from "@/shared/world/runtime_spatial_index_builder";
 import { buildRuntimeWorldView } from "@/shared/world/runtime_view_builder";
+import {
+  BaselineValidationContext,
+  validateCommitPlanBaseline,
+  validatePlacementsBaseline,
+} from "@/shared/world/validation/baseline_rules";
+import { ValidationResult } from "@/shared/world/validation/validation";
 
 /**
  * Summary of a single playground pipeline step.
@@ -125,6 +135,9 @@ export interface PlaygroundResult {
     }[];
   };
 
+  /** Runtime snapshot (Phase 25) */
+  readonly snapshot: RuntimeSnapshot;
+
   /** Pipeline step summaries */
   readonly steps: readonly PlaygroundStepSummary[];
 }
@@ -167,7 +180,7 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
 
   // Validate commit plan
   const commitValidation = validateCommitPlanBaseline(ctx, {
-    plan: fixture.commitPlan,
+    plan: fixture.commitPlan!,
     livePlacements: fixture.placements,
   });
 
@@ -182,7 +195,7 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
     name: "Build RuntimeWorldView",
     details: {
       basePlacementCount: fixture.placements.length,
-      commitChangeCount: fixture.commitPlan.changes.length,
+      commitChangeCount: fixture.commitPlan!.changes.length,
       validationIssueCount: mergedValidationResult.issues.length,
     },
   });
@@ -199,7 +212,7 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
   const worldView = buildRuntimeWorldView({
     regions: fixture.regions,
     placements: fixture.placements,
-    commitPlan: fixture.commitPlan,
+    commitPlan: fixture.commitPlan!,
     validationResult: mergedValidationResult,
   });
 
@@ -315,6 +328,26 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
     onlyValid: true,
   });
 
+  // Step 8: Generate runtime snapshot (Phase 25)
+  steps.push({ name: "Generate runtime snapshot" });
+  const snapshot = buildRuntimeSnapshot(
+    {
+      includeWorldView: true,
+      includeSpatialIndex: true,
+      includeDiff: true,
+      includeInvariants: true,
+      includeLinking: true,
+      includeTiming: false,
+    },
+    {
+      worldView,
+      spatialIndex,
+      diff: runtimeDiff,
+      invariants: invariantReport,
+      linking: linkingIndex,
+    }
+  );
+
   // Build linkingSummary (Phase 20)
   const samplePlacementLinkages = Object.values(linkingIndex.byPlacementId)
     .slice(0, 3)
@@ -389,6 +422,7 @@ export async function runRuntimePlayground(): Promise<PlaygroundResult> {
         message: v.message,
       })),
     },
+    snapshot,
     steps,
   };
 

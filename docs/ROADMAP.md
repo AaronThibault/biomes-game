@@ -723,6 +723,38 @@ using deterministic scenarios and a pure timing harness.
 
 ---
 
+## 25.0 Runtime Snapshot & Regression Capture
+
+**Objective:** Implement deterministic snapshot generation for runtime pipeline
+artifacts to enable regression testing and performance tracking.
+
+**Scope:**
+
+- Add `src/shared/runtime/runtime_snapshot.ts` for snapshot builder
+- Integrate snapshot generation into playground and benchmark tools
+- Produce stable, JSON-serializable snapshots of all runtime artifacts
+- Support regression comparison for future phases
+
+**Deliverables:**
+
+- `src/shared/runtime/runtime_snapshot.ts` — Snapshot builder module
+- Updated `tools/runtime_playground/playground.ts` — Playground integration
+- Updated `tools/runtime_bench/bench.ts` — Benchmark integration
+- Documentation updates
+
+**Constraints:**
+
+- Additive-only (no changes to public runtime types)
+- Pure, deterministic functions
+- JSON-serializable output with stable key ordering
+- No I/O beyond stdout
+
+**Output:**
+
+- [src/shared/runtime/runtime_snapshot.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/runtime_snapshot.ts)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

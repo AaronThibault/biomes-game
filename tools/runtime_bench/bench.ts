@@ -6,6 +6,7 @@
  * Outputs machine-readable JSON timings to stdout.
  */
 
+import { buildRuntimeLinkingIndex } from "@/shared/linking/runtime_linking";
 import { timeBlock } from "@/shared/runtime/perf_utils";
 import { diffRuntimeWorldViews } from "@/shared/runtime/runtime_diff";
 import { checkRuntimeInvariants } from "@/shared/runtime/runtime_invariants";
@@ -13,6 +14,10 @@ import {
   generateRuntimeScenario,
   RuntimeScenarioSpec,
 } from "@/shared/runtime/runtime_scenario_generator";
+import {
+  buildRuntimeSnapshot,
+  RuntimeSnapshot,
+} from "@/shared/runtime/runtime_snapshot";
 import { buildRuntimeSpatialIndex } from "@/shared/world/runtime_spatial_index_builder";
 import { buildRuntimeWorldView } from "@/shared/world/runtime_view_builder";
 import {
@@ -43,6 +48,7 @@ interface ScenarioPerfResult {
     readonly diffMs: number;
     readonly invariantsMs: number;
   };
+  readonly snapshot: RuntimeSnapshot;
 }
 
 /**
@@ -140,14 +146,55 @@ async function runBenchmarks(): Promise<BenchResult> {
       diffRuntimeWorldViews(baselineWorldView, committedWorldView)
     );
 
+    // 6.5 Linking Index (needed for invariants and snapshot)
+    // Not timed separately in original spec, but needed.
+    // I'll add a quick build here.
+    const linkingIndex = buildRuntimeLinkingIndex(
+      scenario.regions,
+      scenario.placements
+    );
+
     // 7. Invariants
-    const { durationMs: invariantsMs } = await timeBlock("invariants", () =>
-      checkRuntimeInvariants({
+    const { durationMs: invariantsMs, result: invariants } = await timeBlock(
+      "invariants",
+      () =>
+        checkRuntimeInvariants({
+          worldView: committedWorldView,
+          spatialIndex,
+          diff,
+          validationResult: mergedValidation,
+          linkingIndex,
+        })
+    );
+
+    // 8. Snapshot
+    const timings = {
+      scenarioGenerationMs,
+      baselineValidationMs,
+      baselineWorldViewMs,
+      committedWorldViewMs,
+      spatialIndexMs,
+      diffMs,
+      invariantsMs,
+    };
+
+    const snapshot = buildRuntimeSnapshot(
+      {
+        includeWorldView: true,
+        includeSpatialIndex: true,
+        includeDiff: true,
+        includeInvariants: true,
+        includeLinking: true,
+        includeTiming: true,
+      },
+      {
         worldView: committedWorldView,
         spatialIndex,
         diff,
-        validationResult: mergedValidation,
-      })
+        invariants,
+        linking: linkingIndex,
+        timing: timings,
+      }
     );
 
     // Collect results
@@ -165,15 +212,8 @@ async function runBenchmarks(): Promise<BenchResult> {
         placementCountBaseline: baselineWorldView.placements.length,
         placementCountCommitted: committedWorldView.placements.length,
       },
-      timings: {
-        scenarioGenerationMs,
-        baselineValidationMs,
-        baselineWorldViewMs,
-        committedWorldViewMs,
-        spatialIndexMs,
-        diffMs,
-        invariantsMs,
-      },
+      timings,
+      snapshot,
     });
   }
 

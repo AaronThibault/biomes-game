@@ -306,6 +306,35 @@ deterministic scenarios ("tiny", "small", "medium") and reports timings for:
 Output is a single JSON object with an array of `RuntimeBenchRunResult`
 entries, suitable for regression tracking and performance comparisons.
 
+### 3.10. Runtime Snapshot & Regression Capture (Phase 25)
+
+The playground and benchmark tools now produce a `snapshot` field in their
+JSON output. This snapshot is a deterministic, JSON-serializable representation
+of the key runtime artifacts:
+
+- `worldView`: The final state of regions and placements.
+- `spatialIndex`: A summary of the spatial index state.
+- `diff`: The computed runtime diff (added/removed/updated).
+- `invariants`: The result of invariant checks.
+- `linking`: The USD ↔ PlanGraph ↔ Runtime linkage index.
+- `timing`: (Benchmark only) Timing measurements for pipeline stages.
+
+**Example Snapshot Structure:**
+
+```json
+{
+  "worldView": { "regions": [...], "placements": [...] },
+  "spatialIndex": { "type": "RuntimeSpatialIndex", "status": "Functional" },
+  "diff": { "added": [], "removed": [], "updated": [] },
+  "invariants": { "hasErrors": false, "violations": [] },
+  "linking": { "byPlacementId": {...}, ... },
+  "timing": { "scenarioGenerationMs": 12, ... }
+}
+```
+
+This snapshot allows for automated regression testing by comparing the output
+of the current run against a known "golden" snapshot.
+
 ## Playground Result
 
 The playground outputs a JSON summary with the following structure:

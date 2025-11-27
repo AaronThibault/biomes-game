@@ -934,6 +934,67 @@ This file is append-only: new phases are added chronologically without modifying
 - Measured timings for all pipeline stages
 - Verified JSON output structure
 
+---
+
+## Phase 25 — Runtime Snapshot & Regression Capture
+
+**Completed:** 2025-11-27
+
+### Intent Summary
+
+- Provide deterministic, reproducible snapshots of runtime pipeline artifacts
+- Enable regression testing by comparing snapshots across runs
+- Support performance tracking with stable JSON output
+- Integrate snapshot generation into playground and benchmark tools
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_playground_model.md` — Updated with snapshot details
+
+**Shared Runtime:**
+
+- `src/shared/runtime/runtime_snapshot.ts` — Snapshot builder module
+
+**Tools:**
+
+- `tools/runtime_playground/playground.ts` — Playground integration
+- `tools/runtime_bench/bench.ts` — Benchmark integration
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Additive-only (no changes to public runtime types)
+- Pure, deterministic functions
+- JSON-serializable with stable key ordering
+- No I/O beyond stdout
+
+**Snapshot Contents:**
+
+- `worldView`: Regions and placements
+- `spatialIndex`: Functional index summary
+- `diff`: Added/removed/updated placements
+- `invariants`: Violation reports
+- `linking`: USD ↔ PlanGraph ↔ Runtime linkages
+- `timing`: (Benchmark only) Performance measurements
+
+### Completion Notes
+
+- Implemented `buildRuntimeSnapshot()` with configurable spec flags
+- Integrated into playground (without timing) and benchmark (with timing)
+- All snapshot fields are deterministic and regression-testable
+- Spatial index serialized as functional summary (methods cannot be serialized)
+
+---
+
+## Phase 8 — Runtime WorldView Builder
+
+**Completed:** 2025-11-24
+
+**Intent Summary:**
+
 - All helpers are internal (not exported)
 
 **Integration Boundaries:**
