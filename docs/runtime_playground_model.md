@@ -291,6 +291,21 @@ The playground executes the following pipeline sequentially:
 - Deterministic transforms
 - No synthetic validation generation (relies on Phase 19 baseline)
 
+### 3.9. Performance Harness (Phase 24)
+
+A separate tool `tools/runtime_bench/bench.ts` runs a small set of
+deterministic scenarios ("tiny", "small", "medium") and reports timings for:
+
+- Scenario generation
+- Baseline validation
+- WorldView construction (baseline + committed)
+- Spatial index build
+- Runtime diff computation
+- Invariant checks
+
+Output is a single JSON object with an array of `RuntimeBenchRunResult`
+entries, suitable for regression tracking and performance comparisons.
+
 ## Playground Result
 
 The playground outputs a JSON summary with the following structure:

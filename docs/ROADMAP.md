@@ -698,6 +698,31 @@ npx ts-node tools/runtime_playground/playground.ts
 
 ---
 
+## 24.0 Runtime Performance Sweep & Scaling Harness
+
+**Objective:** Measure how the Believe runtime pipeline scales with world size
+using deterministic scenarios and a pure timing harness.
+
+**Scope:**
+
+- Add `tools/runtime_bench/bench.ts` for performance runs
+- Use `RuntimeScenarioGenerator` to produce multiple scenario sizes
+- Time validation, world view build, spatial indexing, diff, and invariant checks
+- Output JSON results for regression tracking
+
+**Deliverables:**
+
+- `tools/runtime_bench/bench.ts` — scaling harness
+- `src/shared/runtime/perf_utils.ts` — timing helper
+- Documentation updates
+
+**Output:**
+
+- [tools/runtime_bench/bench.ts](file:///c:/Gamebridge/Dev/biomes-game/tools/runtime_bench/bench.ts)
+- [src/shared/runtime/perf_utils.ts](file:///c:/Gamebridge/Dev/biomes-game/src/shared/runtime/perf_utils.ts)
+
+---
+
 ## 5.2 Performance, LOD, and Mobile Profiles
 
 - Device-based render scaling

@@ -892,6 +892,48 @@ This file is append-only: new phases are added chronologically without modifying
 - Replaced hard-coded fixture in playground with generator call
 - Verified determinism and correct ID generation
 - Verified no regression in playground output structure
+
+---
+
+## Phase 24 — Runtime Performance Sweep & Scaling Harness
+
+**Completed:** 2025-11-26
+
+### Intent Summary
+
+- Measure how the runtime pipeline scales with world size
+- Provide a deterministic, Carmack-style benchmark harness
+- Focus on measurement only, not optimization
+- Output machine-readable JSON for regression tracking
+
+### Key Artifacts
+
+**Documentation:**
+
+- `docs/runtime_playground_model.md` — Updated with benchmark details
+
+**Shared Runtime:**
+
+- `src/shared/runtime/perf_utils.ts` — Timing utilities
+
+**Tools:**
+
+- `tools/runtime_bench/bench.ts` — Performance harness
+
+### Notes / Constraints
+
+**Design Constraints:**
+
+- Additive-only (no changes to public runtime types)
+- Pure, deterministic functions (no I/O beyond console)
+- Uses existing scenario generator and validation logic
+
+### Completion Notes
+
+- Implemented `bench.ts` with "tiny", "small", and "medium" scenarios
+- Measured timings for all pipeline stages
+- Verified JSON output structure
+
 - All helpers are internal (not exported)
 
 **Integration Boundaries:**
